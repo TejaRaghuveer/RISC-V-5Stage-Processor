@@ -1,0 +1,239 @@
+# Verilog/SystemVerilog Project .gitignore
+
+# Simulation artifacts
+*.vcd
+*.fsdb
+*.vpd
+*.lxt
+*.fst
+*.ghw
+*.vcd.gz
+*.vpd.gz
+
+# Log files
+*.log
+*.jou
+*.str
+*.pb
+
+# Compiled objects
+*.o
+*.so
+*.a
+
+# Executables
+*.exe
+*.out
+*.x
+a.out
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.bak
+*.tmp
+
+# Simulation tool specific
+# ModelSim/QuestaSim
+work/
+modelsim.ini
+transcript
+vsim.wlf
+*.wlf
+
+# Xilinx Vivado
+*.xpr
+*.xpr.user
+*.jou
+*.log
+*.str
+*.rpt
+*.xml
+*.html
+*.pb
+*.zip
+*.tar.gz
+*.cache/
+*.hw
+*.hwdef
+*.bit
+*.mcs
+*.prm
+*.bin
+*.ltx
+*.hdf
+*.sysdef
+*.hwh
+*.tcl.user
+*.tcl.user.*
+vivado/
+vivado_pid*
+*.ip_user_files/
+*.sim/
+*.srcs/
+*.data/
+*.runs/
+*.cache/
+.hw/
+.sdk/
+*.sdk/
+*.hwdef
+*.sysdef
+*.hwh
+*.ltx
+*.mcs
+*.prm
+*.bin
+*.bit
+*.hdf
+*.zip
+*.tar.gz
+*.pb
+*.xml
+*.html
+*.rpt
+*.str
+*.jou
+*.log
+*.xpr.user
+*.xpr
+
+# Intel Quartus
+*.qpf
+*.qsf
+*.qws
+*.qarlog
+*.qarlog.*
+*.rpt
+*.summary
+*.done
+*.jdi
+*.pin
+*.sopcinfo
+*.sof
+*.pof
+*.rbf
+*.rpd
+*.sopc
+*.qsys
+*.sopcinfo
+*.jdi
+*.pin
+*.summary
+*.done
+*.qarlog
+*.qarlog.*
+*.rpt
+*.qws
+*.qsf
+*.qpf
+db/
+output_files/
+incremental_db/
+*.rbf
+*.rpd
+*.sopc
+*.qsys
+*.sopcinfo
+*.jdi
+*.pin
+*.summary
+*.done
+*.qarlog
+*.qarlog.*
+*.rpt
+*.qws
+*.qsf
+*.qpf
+
+# Synopsys VCS
+*.vpd
+*.vcd
+*.log
+*.key
+*.h
+*.daidir/
+*.csrc/
+simv
+simv.daidir/
+simv.vdb/
+uvm_hdl/
+vcs.key
+vcs.log
+*.vpd.gz
+*.vcd.gz
+
+# Cadence Incisive/Xcelium
+*.log
+*.key
+*.h
+*.vpd
+*.vcd
+*.shm/
+*.dsn
+*.trn
+*.vcd.gz
+*.vpd.gz
+xcelium.d/
+xrun.log
+xrun.history
+xrun.key
+INCA_libs/
+.simvision/
+
+# Verilator
+obj_dir/
+*.d
+*.a
+*.o
+*.so
+*.exe
+*.out
+
+# Icarus Verilog
+*.vvp
+*.vcd
+*.lxt
+*.fst
+
+# GHDL
+*.cf
+*.o
+*.exe
+*.ghw
+*.vcd
+*.fst
+*.lxt
+
+# Coverage files
+*.ucm
+*.ucdb
+*.vdb
+coverage/
+*.cov
+*.covdb
+
+# Lint tool outputs
+*.lint
+*.log
+
+# Backup files
+*~
+*.bak
+*.backup
+*.old
+
+# OS specific
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Project specific (add your own)
+# *.mem
+# *.hex
+# *.coe
+
