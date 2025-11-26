@@ -860,3 +860,4 @@ This 5-stage pipeline architecture provides a balanced trade-off between perform
 
 The architecture supports the complete RV32I instruction set with efficient hazard handling through forwarding and minimal pipeline stalls. The modular design allows for future enhancements such as branch prediction, cache systems, and extended instruction sets.
 
+
