@@ -1,0 +1,13 @@
+// RISC-V Instruction Memory Initialization File
+// Format: One 32-bit instruction per line (8 hex digits)
+// Comments starting with // are ignored
+// Empty lines are ignored
+
+// Simple test program: Add two numbers and store result
+00100093  // ADDI x1, x0, 1    (x1 = 1)
+00200113  // ADDI x2, x0, 2    (x2 = 2)
+002081B3  // ADD x3, x1, x2    (x3 = x1 + x2 = 3)
+0030A023  // SW x3, 0(x1)      (Store x3 to memory[x1])
+00002083  // LW x1, 0(x0)      (Load from memory[0])
+00000013  // ADDI x0, x0, 0    (NOP)
+
