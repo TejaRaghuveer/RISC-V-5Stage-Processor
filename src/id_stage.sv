@@ -72,7 +72,12 @@ module id_stage #(
     // Register Addresses (for forwarding and hazard detection)
     output logic [4:0]                  rs1_addr,         // Source register 1 address
     output logic [4:0]                  rs2_addr,         // Source register 2 address
-    output logic [4:0]                  rd_addr            // Destination register address
+    output logic [4:0]                  rd_addr,          // Destination register address
+    
+    // Instruction Fields (for ALU control and instruction type)
+    output logic [2:0]                  funct3,           // Function field [14:12]
+    output logic [6:0]                  funct7,           // Function field [31:25]
+    output logic [6:0]                  opcode            // Instruction opcode [6:0]
 );
 
     /**
@@ -82,10 +87,6 @@ module id_stage #(
      *   [31:25] [24:20] [19:15] [14:12] [11:7]  [6:0]
      *   funct7  rs2     rs1     funct3  rd      opcode
      */
-    logic [6:0] opcode;
-    logic [2:0] funct3;
-    logic [6:0] funct7;
-    
     assign opcode = instruction[6:0];
     assign funct3 = instruction[14:12];
     assign funct7 = instruction[31:25];

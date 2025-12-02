@@ -80,18 +80,18 @@ module imem #(
      * Address Boundary Checking
      * 
      * Validates that the registered address is within memory bounds.
-     * This checks addr_reg (the address used for memory read) to ensure
-     * timing alignment between the validity check and the data output.
+     * The validation is computed from the registered address to ensure
+     * timing alignment with the memory read operation.
      * 
      * Timing Alignment:
-     * - addr_in_range checks addr_reg (the registered address)
-     * - Memory read uses addr_reg (the same registered address)
-     * - Both reference the same address value, ensuring correct alignment
+     * - addr_in_range_reg is computed from addr_reg in the same always_ff block
+     * - Memory read uses addr_reg (same registered address)
+     * - Both reference the same addr_reg value at the same time
+     * - This ensures correct timing alignment
      * 
      * Address is valid if: 0 <= addr_reg < MEM_DEPTH
      */
-    logic addr_in_range;
-    assign addr_in_range = (addr_reg < MEM_DEPTH);
+    logic addr_in_range_reg;
     
     /**
      * Memory Initialization
@@ -134,7 +134,7 @@ module imem #(
     end
     
     /**
-     * Memory Read Operation (Synchronous)
+     * Memory Read Operation and Address Validation (Synchronous)
      * 
      * Read operation is synchronous:
      * - Address is registered on clock edge
@@ -146,25 +146,30 @@ module imem #(
      * - Invalid address: Returns NOP (0x00000013)
      * 
      * Timing Alignment:
-     * - addr_in_range checks addr_reg (registered address)
+     * - Address validation computed inline from addr_reg in the same always_ff block
      * - Memory read uses addr_reg (same registered address)
-     * - Both reference the same address value at the same time
-     * - This ensures addr_in_range and data are correctly aligned
+     * - Both reference the same addr_reg value (the OLD value before <= assignment)
+     * - This ensures correct timing alignment
      * 
-     * Note: In the always_ff block, addr_reg uses its current value
-     * (before the <= assignment), which is the address from the previous
-     * cycle. addr_in_range also checks this same addr_reg value, ensuring
-     * they reference the same address.
+     * Note: In SystemVerilog always_ff blocks, all right-hand side expressions
+     * use their values BEFORE the clock edge (old values). So addr_reg on the
+     * right-hand side is the OLD value, and the validation is computed from
+     * this same OLD value, ensuring perfect alignment.
      */
     always_ff @(posedge clk) begin
-        if (addr_in_range) begin
+        // Compute address validation inline from registered address
+        // This uses the OLD value of addr_reg (before the <= assignment)
+        // Memory read uses the same OLD value of addr_reg
+        if (addr_reg < MEM_DEPTH) begin
             // Valid address: Read from memory
-            // addr_reg and addr_in_range both reference the same address
+            // Validation and memory access both use the same OLD addr_reg value
             data <= memory[addr_reg];
+            addr_in_range_reg <= 1'b1;
         end else begin
             // Invalid address: Return NOP instruction
             // NOP = ADDI x0, x0, 0 = 0x00000013
             data <= 32'h00000013;
+            addr_in_range_reg <= 1'b0;
         end
     end
     
@@ -172,15 +177,13 @@ module imem #(
      * Address Valid Signal
      * 
      * Indicates whether the registered address is within valid range.
-     * This signal is registered to match the timing of the data output.
+     * This signal uses the registered validation to match the timing of the data output.
      * Both addr_valid and data are registered outputs that reference the
      * same addr_reg value, ensuring correct timing alignment.
      * 
      * This signal can be used by the processor to detect memory access errors.
      */
-    always_ff @(posedge clk) begin
-        addr_valid <= addr_in_range;
-    end
+    assign addr_valid = addr_in_range_reg;
     
     /**
      * Memory Organization Summary:
