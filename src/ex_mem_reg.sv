@@ -55,9 +55,11 @@ module ex_mem_reg #(
     input  logic                        ex_RegWrite,      // Register write enable
     
     // Branch/Jump Information
+    input  logic                        ex_Branch,        // Branch instruction
+    input  logic                        ex_Jump,          // Jump instruction
     input  logic                        ex_branch_taken,  // Branch condition evaluation
     input  logic [ADDR_WIDTH-1:0]       ex_branch_target, // Branch target address
-    input  logic [ADDR_WIDTH-1:0]       ex_jump_target,   // Jump target address
+    input  logic [ADDR_WIDTH-1:0]       ex_jump_target   // Jump target address
     
     // ============================================
     // Outputs to MEM Stage
@@ -77,6 +79,8 @@ module ex_mem_reg #(
     output logic                        mem_RegWrite,     // Register write enable
     
     // Branch/Jump Information
+    output logic                        mem_Branch,       // Branch instruction
+    output logic                        mem_Jump,         // Jump instruction
     output logic                        mem_branch_taken, // Branch condition evaluation
     output logic [ADDR_WIDTH-1:0]       mem_branch_target, // Branch target address
     output logic [ADDR_WIDTH-1:0]       mem_jump_target   // Jump target address
@@ -103,6 +107,8 @@ module ex_mem_reg #(
     logic RegWrite_reg;
     
     // Branch/Jump Registers
+    logic Branch_reg;
+    logic Jump_reg;
     logic branch_taken_reg;
     logic [ADDR_WIDTH-1:0] branch_target_reg;
     logic [ADDR_WIDTH-1:0] jump_target_reg;
@@ -131,6 +137,8 @@ module ex_mem_reg #(
             MemWrite_reg <= 1'b0;
             MemToReg_reg <= 1'b0;
             RegWrite_reg <= 1'b0;
+            Branch_reg <= 1'b0;
+            Jump_reg <= 1'b0;
             branch_taken_reg <= 1'b0;
             branch_target_reg <= {ADDR_WIDTH{1'b0}};
             jump_target_reg <= {ADDR_WIDTH{1'b0}};
@@ -144,6 +152,8 @@ module ex_mem_reg #(
             MemWrite_reg <= 1'b0;        // No memory write
             MemToReg_reg <= 1'b0;        // Don't care
             RegWrite_reg <= 1'b0;        // No register write
+            Branch_reg <= 1'b0;          // No branch
+            Jump_reg <= 1'b0;            // No jump
             branch_taken_reg <= 1'b0;    // No branch
             branch_target_reg <= {ADDR_WIDTH{1'b0}};
             jump_target_reg <= {ADDR_WIDTH{1'b0}};
@@ -156,6 +166,8 @@ module ex_mem_reg #(
             MemWrite_reg <= ex_MemWrite;
             MemToReg_reg <= ex_MemToReg;
             RegWrite_reg <= ex_RegWrite;
+            Branch_reg <= ex_Branch;
+            Jump_reg <= ex_Jump;
             branch_taken_reg <= ex_branch_taken;
             branch_target_reg <= ex_branch_target;
             jump_target_reg <= ex_jump_target;
@@ -176,6 +188,8 @@ module ex_mem_reg #(
     assign mem_MemWrite = MemWrite_reg;
     assign mem_MemToReg = MemToReg_reg;
     assign mem_RegWrite = RegWrite_reg;
+    assign mem_Branch = Branch_reg;
+    assign mem_Jump = Jump_reg;
     assign mem_branch_taken = branch_taken_reg;
     assign mem_branch_target = branch_target_reg;
     assign mem_jump_target = jump_target_reg;
