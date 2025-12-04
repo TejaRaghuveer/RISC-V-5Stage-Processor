@@ -13,7 +13,8 @@
  * Pipeline Architecture:
  * - 5-stage pipeline: IF → ID → EX → MEM → WB
  * - Pipeline registers: IF/ID, ID/EX, EX/MEM, MEM/WB
- * - Forwarding unit for data hazard resolution
+ * - Forwarding unit for data hazard resolution (RAW hazards)
+ * - Hazard detection unit for load-use hazard stalling
  * - Instruction memory (IMEM) and data memory (DMEM)
  * 
  * Data Flow:
@@ -42,9 +43,9 @@ module riscv_pipeline #(
     input  logic                        clk,              // Clock signal
     input  logic                        rst_n,            // Active-low reset
     
-    // Pipeline Control (for future hazard detection unit)
-    input  logic                        pipeline_stall,   // Pipeline stall signal
-    input  logic                        pipeline_flush    // Pipeline flush signal
+    // Pipeline Control (External - optional, can be tied to 0 if not used)
+    input  logic                        pipeline_stall,   // External pipeline stall signal (optional)
+    input  logic                        pipeline_flush    // External pipeline flush signal (optional)
 );
 
     // ============================================
@@ -172,9 +173,27 @@ module riscv_pipeline #(
     logic                              branch_taken;      // Branch/jump taken signal
     
     /**
+     * Branch/Jump Control Signals
+     */
+    logic                              ex_PCSrc;          // PC source select from EX stage (combinational)
+    logic                              ex_branch_flush;   // Branch/jump flush from EX stage (combinational)
+    logic                              mem_PCSrc;         // PC source select from EX/MEM register (registered)
+    logic                              mem_branch_flush;  // Branch/jump flush from EX/MEM register (registered)
+    
+    /**
+     * Signals for Branch/Jump Control Unit
+     * These are needed for branch condition evaluation
+     */
+    logic [DATA_WIDTH-1:0]             ex_rs1_data_forwarded; // Forwarded rs1 data for branch control
+    logic [DATA_WIDTH-1:0]             ex_rs2_data_forwarded; // Forwarded rs2 data for branch control
+    
+    /**
      * Pipeline Control Signals (Internal)
      */
-    logic                              pipeline_flush_internal; // Internal flush signal (from branch/jump)
+    logic                              hazard_stall;            // Stall signal from hazard detection unit
+    logic                              hazard_id_ex_flush;      // ID/EX flush signal from hazard detection unit
+    logic                              pipeline_stall_internal;  // Combined stall signal (hazard + external)
+    logic                              pipeline_flush_internal;  // Combined flush signal (branch/jump + external + hazard)
     
     // ============================================
     // Instruction Memory (IMEM) Instantiation
@@ -217,9 +236,9 @@ module riscv_pipeline #(
     ) if_stage_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .branch_target(branch_target),      // Branch/jump target from EX/MEM register
-        .branch_taken(branch_taken),         // Branch/jump taken signal from EX/MEM register
-        .stall(pipeline_stall),              // Pipeline stall signal
+        .branch_target(branch_target),      // Branch/jump target address (selected)
+        .branch_taken(mem_PCSrc),           // PC source select (1 = branch/jump taken, 0 = sequential)
+        .stall(pipeline_stall_internal),     // Pipeline stall signal (hazard + external)
         .flush(pipeline_flush_internal),     // Pipeline flush signal (internal or external)
         .imem_addr(if_imem_addr),            // Instruction memory address
         .imem_data(if_imem_data),            // Instruction from memory
@@ -244,7 +263,7 @@ module riscv_pipeline #(
     ) if_id_reg_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .enable(~pipeline_stall),           // Enable when not stalled
+        .enable(~pipeline_stall_internal),  // Enable when not stalled (active low: ~stall)
         .flush(pipeline_flush_internal),    // Flush on branch/jump taken or external flush
         .if_instruction(if_instruction),    // Instruction from IF stage
         .if_PC(if_PC),                       // PC from IF stage
@@ -276,7 +295,7 @@ module riscv_pipeline #(
         .wb_reg_write_en(wb_RegWrite),       // Write enable from WB stage
         .wb_rd_addr(wb_rd_addr),             // Write address from WB stage
         .wb_rd_data(wb_write_data),          // Write data from WB stage
-        .stall(pipeline_stall),              // Pipeline stall signal
+        .stall(pipeline_stall_internal),     // Pipeline stall signal (hazard + external)
         .flush(pipeline_flush_internal),     // Pipeline flush signal (internal or external)
         .rs1_data(id_rs1_data),              // Source register 1 data
         .rs2_data(id_rs2_data),              // Source register 2 data
@@ -315,8 +334,8 @@ module riscv_pipeline #(
     ) id_ex_reg_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .enable(~pipeline_stall),             // Enable when not stalled
-        .flush(pipeline_flush_internal),      // Flush on branch/jump taken or external flush
+        .enable(~pipeline_stall_internal),    // Enable when not stalled (active low: ~stall)
+        .flush(pipeline_flush_internal || hazard_id_ex_flush), // Flush: branch/jump + external + hazard NOP insertion
         .id_rs1_data(id_rs1_data),           // Source register 1 data
         .id_rs2_data(id_rs2_data),           // Source register 2 data
         .id_rs1_addr(id_rs1_addr),            // Source register 1 address
@@ -356,6 +375,59 @@ module riscv_pipeline #(
         .ex_funct7(ex_funct7),               // Function field to EX
         .ex_opcode(ex_opcode)                // Instruction opcode to EX
     );
+    
+    // ============================================
+    // Hazard Detection Unit
+    // ============================================
+    
+    /**
+     * Hazard Detection Unit Module
+     * 
+     * Detects load-use data hazards that cannot be resolved by forwarding.
+     * When a load instruction in ID/EX stage produces data needed by the
+     * instruction in ID stage, the pipeline must be stalled for one cycle.
+     * 
+     * Hazard Condition:
+     * - Load instruction in ID/EX stage (ex_MemRead = 1)
+     * - AND load's destination register (ex_rd_addr) matches rs1 or rs2
+     *   of instruction in ID stage (id_rs1_addr or id_rs2_addr)
+     * 
+     * Pipeline Control Actions:
+     * - Stall: Prevents PC update and holds IF/ID register
+     * - Flush ID/EX: Inserts NOP/bubble in ID/EX register
+     * 
+     * Timing:
+     * - Detection is combinational (based on current pipeline state)
+     * - Stall/flush signals take effect on next clock cycle
+     * - One-cycle stall allows load to complete before dependent instruction uses data
+     */
+    hazard_detection_unit hazard_detection_unit_inst (
+        // Inputs from Pipeline Registers
+        .id_ex_MemRead(ex_MemRead),          // Memory read enable from ID/EX register
+        .id_ex_rd_addr(ex_rd_addr),           // Destination register address from ID/EX register
+        .if_id_rs1_addr(id_rs1_addr),        // Source register 1 address from IF/ID register (via ID stage)
+        .if_id_rs2_addr(id_rs2_addr),        // Source register 2 address from IF/ID register (via ID stage)
+        
+        // Outputs for Pipeline Control
+        .stall(hazard_stall),                 // Pipeline stall signal (active high)
+        .id_ex_flush(hazard_id_ex_flush)     // ID/EX register flush signal (active high)
+    );
+    
+    /**
+     * Combined Pipeline Stall Signal Generation
+     * 
+     * Combines hazard stall with external stall signal.
+     * Pipeline stalls when:
+     * - Load-use hazard detected (hazard_stall = 1), OR
+     * - External stall requested (pipeline_stall = 1)
+     * 
+     * Stall Behavior:
+     * - Prevents PC from updating (PC holds current value)
+     * - Prevents IF/ID register from updating (holds current instruction)
+     * - Causes pipeline bubble in IF and ID stages
+     * - Used for data hazards that cannot be resolved by forwarding
+     */
+    assign pipeline_stall_internal = hazard_stall || pipeline_stall;
     
     // ============================================
     // Forwarding Unit
@@ -413,42 +485,101 @@ module riscv_pipeline #(
         .branch_taken(ex_branch_taken),      // Branch condition evaluation
         .branch_target(ex_branch_target),    // Branch target address
         .jump_target(ex_jump_target),        // Jump target address
-        .rs2_data_out(ex_rs2_data_out)       // rs2 data (for store instructions)
+        .rs2_data_out(ex_rs2_data_out),      // rs2 data (for store instructions)
+        .rs1_data_forwarded_out(ex_rs1_data_forwarded), // Forwarded rs1 data (for branch control)
+        .rs2_data_forwarded_out(ex_rs2_data_forwarded)  // Forwarded rs2 data (for branch control)
     );
     
     // ============================================
-    // Branch/Jump Target Selection
+    // Branch/Jump Control Unit
     // ============================================
     
     /**
-     * Branch/Jump Target Multiplexer
+     * Branch/Jump Control Unit Module
+     * 
+     * Evaluates branch conditions and generates PC source selection and flush signals.
+     * Uses combinational signals from EX stage for immediate evaluation.
+     * 
+     * Branch Condition Evaluation:
+     * - BEQ (000): rs1 == rs2 → uses zero_flag
+     * - BNE (001): rs1 != rs2 → uses !zero_flag
+     * - BLT (100): rs1 < rs2 (signed) → uses signed comparison
+     * - BGE (101): rs1 >= rs2 (signed) → uses signed comparison
+     * - BLTU (110): rs1 < rs2 (unsigned) → uses unsigned comparison
+     * - BGEU (111): rs1 >= rs2 (unsigned) → uses unsigned comparison
+     * 
+     * Jump Control:
+     * - JAL: Always taken (PC-relative)
+     * - JALR: Always taken (register + immediate)
+     * 
+     * Outputs:
+     * - PCSrc: PC source select (0 = PC+4, 1 = branch/jump target)
+     * - flush: Pipeline flush signal (clears IF/ID and ID/EX registers)
+     * - branch_taken: Branch condition evaluation result
+     */
+    branch_jump_control #(
+        .DATA_WIDTH(DATA_WIDTH),
+        .ADDR_WIDTH(ADDR_WIDTH)
+    ) branch_jump_control_inst (
+        // Control Signals from ID/EX Register
+        .Branch(ex_Branch),                  // Branch instruction indicator
+        .Jump(ex_Jump),                      // Jump instruction indicator
+        .funct3(ex_funct3),                  // Function field [14:12] (branch type)
+        
+        // ALU Results for Branch Condition Evaluation
+        .zero_flag(ex_zero_flag),            // ALU zero flag (from SUB operation)
+        .rs1_data(ex_rs1_data_forwarded),   // Forwarded rs1 data (for comparison)
+        .rs2_data(ex_rs2_data_forwarded),   // Forwarded rs2 data (for comparison)
+        
+        // Target Addresses from EX Stage
+        .branch_target(ex_branch_target),    // Branch target address (PC + immediate)
+        .jump_target(ex_jump_target),        // Jump target address (PC + immediate or rs1 + immediate)
+        
+        // Outputs for Pipeline Control
+        .PCSrc(ex_PCSrc),                    // PC source select (0 = PC+4, 1 = target)
+        .flush(ex_branch_flush),             // Pipeline flush signal (active high)
+        .branch_taken()                      // Branch condition evaluation (not used, ex_branch_taken used instead)
+    );
+    
+    // ============================================
+    // Branch/Jump Target Selection and PC Control
+    // ============================================
+    
+    /**
+     * Branch/Jump Target Multiplexer and PC Source Selection
      * 
      * Selects target address for PC update using REGISTERED signals from EX/MEM.
      * This ensures proper timing alignment - branch/jump decision is made in EX stage
      * and registered in EX/MEM register before being used for PC update.
      * 
      * Timing:
-     * - EX stage evaluates branch/jump condition (combinational)
-     * - EX/MEM register stores result (registered on clock edge)
-     * - PC update uses registered signals (proper timing)
+     * - EX stage: Branch/jump control evaluates condition (combinational)
+     * - EX/MEM register: Stores PCSrc, flush, and target addresses (registered on clock edge)
+     * - IF stage: Uses registered PCSrc for PC update (proper timing)
      * 
-     * Selects target address for PC update:
+     * PC Source Selection:
+     * - PCSrc = 0: Sequential execution (PC + 4, handled in IF stage)
+     * - PCSrc = 1: Branch/Jump taken (use target address)
+     * 
+     * Target Address Selection:
      * - Jump instructions: Use jump_target
-     * - Branch instructions: Use branch_target if taken
-     * - Otherwise: Use sequential PC+4 (handled in IF stage)
+     * - Branch instructions: Use branch_target
+     * - Otherwise: Don't care (PCSrc = 0)
      */
     always_comb begin
         // Use registered signals from EX/MEM register for proper timing
-        if (mem_Jump) begin
-            // Jump instruction: Use jump target (always taken)
-            branch_target = mem_jump_target;
-            branch_taken = 1'b1;
-        end else if (mem_Branch && mem_branch_taken) begin
-            // Branch instruction: Use branch target if taken
-            branch_target = mem_branch_target;
+        if (mem_PCSrc) begin
+            // Branch/Jump taken: Select target address
+            if (mem_Jump) begin
+                // Jump instruction: Use jump target (always taken)
+                branch_target = mem_jump_target;
+            end else begin
+                // Branch instruction: Use branch target (if taken)
+                branch_target = mem_branch_target;
+            end
             branch_taken = 1'b1;
         end else begin
-            // No branch/jump: Sequential execution (IF stage handles PC+4)
+            // No branch/jump or not taken: Sequential execution (IF stage handles PC+4)
             branch_target = {ADDR_WIDTH{1'b0}};  // Don't care
             branch_taken = 1'b0;
         end
@@ -462,8 +593,16 @@ module riscv_pipeline #(
      * 
      * Flush clears IF/ID and ID/EX pipeline registers, inserting NOPs.
      * External flush signal (pipeline_flush) can also be used for exceptions.
+     * 
+     * Flush Sources:
+     * - Branch/Jump taken: mem_branch_flush (from branch/jump control, registered)
+     * - External flush: pipeline_flush (for exceptions, interrupts)
+     * 
+     * Note: Hazard detection unit generates its own ID/EX flush signal
+     * (hazard_id_ex_flush) which is ORed directly into ID/EX register flush.
+     * This allows hazard NOP insertion without flushing other pipeline registers.
      */
-    assign pipeline_flush_internal = branch_taken || pipeline_flush;
+    assign pipeline_flush_internal = mem_branch_flush || pipeline_flush;
     
     // ============================================
     // EX/MEM Pipeline Register
@@ -481,7 +620,7 @@ module riscv_pipeline #(
     ) ex_mem_reg_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .enable(~pipeline_stall),            // Enable when not stalled
+        .enable(~pipeline_stall_internal),   // Enable when not stalled (active low: ~stall)
         .flush(pipeline_flush_internal),     // Flush on branch/jump taken or external flush
         .ex_alu_result(ex_alu_result),       // ALU result from EX stage
         .ex_rs2_data(ex_rs2_data_out),       // Source register 2 data from EX stage
@@ -495,6 +634,8 @@ module riscv_pipeline #(
         .ex_branch_taken(ex_branch_taken),   // Branch condition evaluation from EX stage
         .ex_branch_target(ex_branch_target), // Branch target address from EX stage
         .ex_jump_target(ex_jump_target),     // Jump target address from EX stage
+        .ex_PCSrc(ex_PCSrc),                 // PC source select from branch/jump control
+        .ex_branch_flush(ex_branch_flush),   // Branch/jump flush signal from branch/jump control
         .mem_alu_result(mem_alu_result),     // ALU result to MEM stage
         .mem_rs2_data(mem_rs2_data),         // Source register 2 data to MEM stage
         .mem_rd_addr(mem_rd_addr),           // Destination register address to MEM stage
@@ -506,7 +647,9 @@ module riscv_pipeline #(
         .mem_Jump(mem_Jump),                 // Jump instruction to MEM stage
         .mem_branch_taken(mem_branch_taken), // Branch condition evaluation to MEM stage
         .mem_branch_target(mem_branch_target), // Branch target address to MEM stage
-        .mem_jump_target(mem_jump_target)    // Jump target address to MEM stage
+        .mem_jump_target(mem_jump_target),   // Jump target address to MEM stage
+        .mem_PCSrc(mem_PCSrc),               // PC source select to MEM stage (registered)
+        .mem_branch_flush(mem_branch_flush)  // Branch/jump flush to MEM stage (registered)
     );
     
     // ============================================
@@ -555,7 +698,7 @@ module riscv_pipeline #(
     ) mem_wb_reg_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .enable(~pipeline_stall),            // Enable when not stalled
+        .enable(~pipeline_stall_internal),   // Enable when not stalled (active low: ~stall)
         .flush(pipeline_flush_internal),     // Flush on branch/jump taken or external flush
         .mem_read_data(mem_read_data),       // Memory read data from MEM stage
         .mem_alu_result(mem_alu_result_out), // ALU result from MEM stage

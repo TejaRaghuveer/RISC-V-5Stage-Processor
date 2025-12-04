@@ -59,7 +59,9 @@ module ex_mem_reg #(
     input  logic                        ex_Jump,          // Jump instruction
     input  logic                        ex_branch_taken,  // Branch condition evaluation
     input  logic [ADDR_WIDTH-1:0]       ex_branch_target, // Branch target address
-    input  logic [ADDR_WIDTH-1:0]       ex_jump_target   // Jump target address
+    input  logic [ADDR_WIDTH-1:0]       ex_jump_target,   // Jump target address
+    input  logic                        ex_PCSrc,         // PC source select from branch/jump control
+    input  logic                        ex_branch_flush   // Branch/jump flush signal
     
     // ============================================
     // Outputs to MEM Stage
@@ -83,7 +85,9 @@ module ex_mem_reg #(
     output logic                        mem_Jump,         // Jump instruction
     output logic                        mem_branch_taken, // Branch condition evaluation
     output logic [ADDR_WIDTH-1:0]       mem_branch_target, // Branch target address
-    output logic [ADDR_WIDTH-1:0]       mem_jump_target   // Jump target address
+    output logic [ADDR_WIDTH-1:0]       mem_jump_target,  // Jump target address
+    output logic                        mem_PCSrc,        // PC source select (registered)
+    output logic                        mem_branch_flush  // Branch/jump flush (registered)
 );
 
     /**
@@ -142,6 +146,8 @@ module ex_mem_reg #(
             branch_taken_reg <= 1'b0;
             branch_target_reg <= {ADDR_WIDTH{1'b0}};
             jump_target_reg <= {ADDR_WIDTH{1'b0}};
+            PCSrc_reg <= 1'b0;
+            branch_flush_reg <= 1'b0;
         end else if (flush) begin
             // Flush: Clear register (insert NOP/bubble)
             // Set control signals to safe defaults (no operation)
@@ -157,6 +163,8 @@ module ex_mem_reg #(
             branch_taken_reg <= 1'b0;    // No branch
             branch_target_reg <= {ADDR_WIDTH{1'b0}};
             jump_target_reg <= {ADDR_WIDTH{1'b0}};
+            PCSrc_reg <= 1'b0;           // Sequential execution
+            branch_flush_reg <= 1'b0;    // No flush
         end else if (enable) begin
             // Normal operation: Update register with new EX stage data
             alu_result_reg <= ex_alu_result;
@@ -171,6 +179,8 @@ module ex_mem_reg #(
             branch_taken_reg <= ex_branch_taken;
             branch_target_reg <= ex_branch_target;
             jump_target_reg <= ex_jump_target;
+            PCSrc_reg <= ex_PCSrc;
+            branch_flush_reg <= ex_branch_flush;
         end
         // If enable = 0 (stall), register holds current values (no change)
     end
@@ -193,6 +203,8 @@ module ex_mem_reg #(
     assign mem_branch_taken = branch_taken_reg;
     assign mem_branch_target = branch_target_reg;
     assign mem_jump_target = jump_target_reg;
+    assign mem_PCSrc = PCSrc_reg;
+    assign mem_branch_flush = branch_flush_reg;
     
     /**
      * Pipeline Register Contents Summary:

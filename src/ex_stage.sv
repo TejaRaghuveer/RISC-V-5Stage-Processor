@@ -60,7 +60,11 @@ module ex_stage #(
     output logic                        branch_taken,       // Branch condition evaluation
     output logic [ADDR_WIDTH-1:0]       branch_target,     // Branch target address (PC + immediate)
     output logic [ADDR_WIDTH-1:0]       jump_target,       // Jump target address
-    output logic [DATA_WIDTH-1:0]       rs2_data_out       // rs2 data (for store instructions)
+    output logic [DATA_WIDTH-1:0]       rs2_data_out,      // rs2 data (for store instructions)
+    
+    // Forwarded Data Outputs (for branch/jump control unit)
+    output logic [DATA_WIDTH-1:0]       rs1_data_forwarded_out, // Forwarded rs1 data
+    output logic [DATA_WIDTH-1:0]       rs2_data_forwarded_out  // Forwarded rs2 data
 );
 
     /**
@@ -334,6 +338,15 @@ module ex_stage #(
      * Used for store instructions (data to write to memory).
      */
     assign rs2_data_out = rs2_data_forwarded;
+    
+    /**
+     * Forwarded Data Outputs
+     * 
+     * Output forwarded rs1 and rs2 data for branch/jump control unit.
+     * These are used for branch condition evaluation.
+     */
+    assign rs1_data_forwarded_out = rs1_data_forwarded;
+    assign rs2_data_forwarded_out = rs2_data_forwarded;
     
     /**
      * Forwarding Path Summary:
