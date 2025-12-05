@@ -1,0 +1,108 @@
+// RISC-V Comprehensive Test Program
+// Format: One 32-bit instruction per line (8 hex digits)
+// Comments starting with // are ignored
+// Empty lines are ignored
+//
+// This test program verifies:
+// - Immediate instructions (ADDI)
+// - Arithmetic operations (ADD, SUB)
+// - Logical operations (AND, OR, XOR)
+// - Load/Store operations (LW, SW)
+// - Branch instructions (BEQ)
+// - Jump instructions (JAL)
+//
+// Expected Results:
+// - x1 = 0x00000005 (5)
+// - x2 = 0x00000003 (3)
+// - x3 = 0x00000008 (8) - ADD result
+// - x4 = 0xFFFFFFFE (-2) - SUB result
+// - x5 = 0x00000001 (1) - AND result
+// - x6 = 0x00000007 (7) - OR result
+// - x7 = 0x00000006 (6) - XOR result
+// - x8 = 0x00000008 (8) - Loaded value
+// - x9 = 0x00000004 (4) - Branch test result
+// - x10 = 0x00000042 (66) - Jump test result
+
+// ============================================
+// Section 1: Initialize Registers (ADDI)
+// ============================================
+00500093  // ADDI x1, x0, 5      (x1 = 5)
+00300113  // ADDI x2, x0, 3      (x2 = 3)
+00000193  // ADDI x3, x0, 0      (x3 = 0, clear for ADD result)
+00000213  // ADDI x4, x0, 0      (x4 = 0, clear for SUB result)
+00000293  // ADDI x5, x0, 0      (x5 = 0, clear for AND result)
+00000313  // ADDI x6, x0, 0      (x6 = 0, clear for OR result)
+00000393  // ADDI x7, x0, 0      (x7 = 0, clear for XOR result)
+00000413  // ADDI x8, x0, 0      (x8 = 0, clear for load result)
+00000493  // ADDI x9, x0, 0      (x9 = 0, clear for branch test)
+00000513  // ADDI x10, x0, 0     (x10 = 0, clear for jump test)
+
+// ============================================
+// Section 2: Arithmetic Operations (ADD, SUB)
+// ============================================
+002081B3  // ADD x3, x1, x2      (x3 = x1 + x2 = 5 + 3 = 8)
+40210233  // SUB x4, x2, x1      (x4 = x2 - x1 = 3 - 5 = -2, but unsigned = 0xFFFFFFFE)
+
+// ============================================
+// Section 3: Logical Operations (AND, OR, XOR)
+// ============================================
+0020F2B3  // AND x5, x1, x2      (x5 = x1 & x2 = 5 & 3 = 1)
+0020E313  // OR x6, x1, x2       (x6 = x1 | x2 = 5 | 3 = 7)
+0020C393  // XOR x7, x1, x2      (x7 = x1 ^ x2 = 5 ^ 3 = 6)
+
+// ============================================
+// Section 4: Store Results to Memory
+// ============================================
+// Store x3 (ADD result = 8) to memory[0]
+00302023  // SW x3, 0(x0)        (Store x3 to memory[0])
+// Store x4 (SUB result) to memory[1]
+00402223  // SW x4, 4(x0)        (Store x4 to memory[1], byte address 4 = word address 1)
+// Store x5 (AND result) to memory[2]
+00502423  // SW x5, 8(x0)        (Store x5 to memory[2], byte address 8 = word address 2)
+// Store x6 (OR result) to memory[3]
+00602623  // SW x6, 12(x0)       (Store x6 to memory[3], byte address 12 = word address 3)
+// Store x7 (XOR result) to memory[4]
+00702823  // SW x7, 16(x0)       (Store x7 to memory[4], byte address 16 = word address 4)
+
+// ============================================
+// Section 5: Load from Memory (LW)
+// ============================================
+00002403  // LW x8, 0(x0)        (Load from memory[0] into x8, should be 8)
+
+// ============================================
+// Section 6: Branch Test (BEQ)
+// ============================================
+// Test BEQ: if x1 == x1, branch to branch_target
+// First, set up a value to test
+00100493  // ADDI x9, x0, 1      (x9 = 1, initial value)
+// Compare x1 with x1 (should always be equal)
+00108463  // BEQ x1, x1, 8       (if x1 == x1, branch forward by 8 bytes = 2 instructions)
+// This instruction should be skipped if branch is taken
+00200493  // ADDI x9, x0, 2      (x9 = 2, should be skipped)
+// Branch target (should execute if branch taken)
+00300493  // ADDI x9, x0, 3      (x9 = 3, branch target - should execute)
+// After branch (should execute regardless)
+00400493  // ADDI x9, x0, 4      (x9 = 4, after branch - should execute)
+
+// ============================================
+// Section 7: Jump Test (JAL)
+// ============================================
+// JAL: Jump and Link - save return address in x10, jump to jump_target
+// Calculate jump offset: jump_target is 4 instructions ahead (16 bytes)
+// JAL encoding: imm[20|10:1|11|19:12] = 0x00000010 (16 bytes forward)
+// JAL x10, 16 -> opcode=0x6F, rd=x10=0x0A, imm=16=0x000010
+// Full encoding: 0x0100006F
+0100006F  // JAL x10, 16         (Jump forward 16 bytes, save PC+4 in x10)
+// This instruction should be skipped (jumped over)
+00500513  // ADDI x10, x0, 5     (x10 = 5, should be skipped)
+00600513  // ADDI x10, x0, 6     (x10 = 6, should be skipped)
+// Jump target (should execute)
+04200513  // ADDI x10, x0, 66    (x10 = 66 = 0x42, jump target - should execute)
+
+// ============================================
+// Section 8: Final NOPs and End Marker
+// ============================================
+00000013  // ADDI x0, x0, 0      (NOP - end marker)
+00000013  // ADDI x0, x0, 0      (NOP)
+00000013  // ADDI x0, x0, 0      (NOP)
+
