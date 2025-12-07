@@ -116,6 +116,8 @@ module ex_mem_reg #(
     logic branch_taken_reg;
     logic [ADDR_WIDTH-1:0] branch_target_reg;
     logic [ADDR_WIDTH-1:0] jump_target_reg;
+    logic PCSrc_reg;
+    logic branch_flush_reg;
     
     /**
      * Pipeline Register Update Logic

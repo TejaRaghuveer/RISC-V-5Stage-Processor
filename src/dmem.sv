@@ -86,7 +86,7 @@ module dmem #(
      * Word address calculation: addr[MEM_ADDR_WIDTH+1:2]
      * This extracts the word address from the byte address.
      */
-    logic [MEM_ADDR_WIDTH-1:0] word_addr;
+    logic [MEM_ADDR_WIDTH-1:0] word_addr; 
     logic [MEM_ADDR_WIDTH-1:0] word_addr_reg;
     logic addr_in_range;
     logic addr_aligned;
@@ -103,36 +103,29 @@ module dmem #(
     assign addr_aligned = (addr[1:0] == 2'b00);
     
     // Address is valid if both in range and aligned (combinational)
+    // Note: This is for external use. Internal memory operations use registered signals.
     assign addr_valid = addr_in_range && addr_aligned;
-    
-    /**
-     * Registered Address Validation
-     * 
-     * Register address validation for synchronous operations.
-     * This ensures timing alignment between address check and data access.
-     * 
-     * Note: word_addr_reg is computed from addr_reg to ensure timing alignment
-     * with the registered address used for memory access.
-     */
-    always_ff @(posedge clk) begin
-        // Compute word address from registered byte address
-        word_addr_reg <= addr_reg[MEM_ADDR_WIDTH+1:2];
-        // Register validation signals
-        addr_in_range_reg <= (addr_reg[MEM_ADDR_WIDTH+1:2] < MEM_DEPTH);
-        addr_aligned_reg <= (addr_reg[1:0] == 2'b00);
-    end
     
     /**
      * Address and Control Register Update (Synchronous)
      * 
      * Register address, write data, and control signals on clock edge
      * for synchronous read/write operation.
+     * Also compute word address and validation signals from registered address.
      */
     always_ff @(posedge clk) begin
+        // Register inputs
         addr_reg <= addr;
         write_data_reg <= write_data;
         MemRead_reg <= MemRead;
         MemWrite_reg <= MemWrite;
+        
+        // Compute word address and validation from OLD addr_reg value
+        // This ensures timing alignment: word_addr_reg corresponds to the address
+        // that was registered in the previous cycle
+        word_addr_reg <= addr_reg[MEM_ADDR_WIDTH+1:2];
+        addr_in_range_reg <= (addr_reg[MEM_ADDR_WIDTH+1:2] < MEM_DEPTH);
+        addr_aligned_reg <= (addr_reg[1:0] == 2'b00);
     end
     
     /**
@@ -188,14 +181,17 @@ module dmem #(
      * - Word-aligned: Only writes when address is aligned
      * 
      * Timing Alignment:
-     * - Uses registered address validation (addr_in_range_reg, addr_aligned_reg)
-     * - Uses registered word address (word_addr_reg)
-     * - Ensures address check and memory access reference same address
+     * - Computes word address and validation inline from addr_reg in the same always_ff block
+     * - Uses the OLD value of addr_reg (before <= assignment) for both validation and access
+     * - Ensures address check and memory access reference the same addr_reg value
      */
     always_ff @(posedge clk) begin
+        // Use registered word address and validation signals
+        // These are computed from addr_reg in the address registration block
+        // Both use the same OLD addr_reg value, ensuring timing alignment
         if (MemWrite_reg && addr_in_range_reg && addr_aligned_reg) begin
             // Valid write: Write to memory
-            // word_addr_reg contains the registered word address from addr_reg
+            // word_addr_reg corresponds to the address registered in previous cycle
             memory[word_addr_reg] <= write_data_reg;
         end
         // Invalid address or not word-aligned: Write is ignored
@@ -215,14 +211,17 @@ module dmem #(
      * - Word-aligned: Only reads when address is aligned
      * 
      * Timing Alignment:
-     * - Uses registered address validation (addr_in_range_reg, addr_aligned_reg)
-     * - Uses registered word address (word_addr_reg)
-     * - Ensures address check and memory access reference same address
+     * - Computes word address and validation inline from addr_reg in the same always_ff block
+     * - Uses the OLD value of addr_reg (before <= assignment) for both validation and access
+     * - Ensures address check and memory access reference the same addr_reg value
      */
     always_ff @(posedge clk) begin
+        // Use registered word address and validation signals
+        // These are computed from addr_reg in the address registration block
+        // Both use the same OLD addr_reg value, ensuring timing alignment
         if (MemRead_reg && addr_in_range_reg && addr_aligned_reg) begin
             // Valid read: Read from memory
-            // word_addr_reg contains the registered word address from addr_reg
+            // word_addr_reg corresponds to the address registered in previous cycle
             read_data <= memory[word_addr_reg];
         end else begin
             // Invalid address, not aligned, or read not enabled: Return zero

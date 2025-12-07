@@ -1,0 +1,115 @@
+// RISC-V SLT/SLTU Test Program (Machine Code)
+// Tests signed and unsigned comparison operations
+// Format: One 32-bit instruction per line (8 hex digits)
+
+// ============================================
+// Section 1: Initialize Test Values
+// ============================================
+00500093  // ADDI x1, x0, 5          (x1 = 5)
+00300113  // ADDI x2, x0, 3          (x2 = 3)
+FFB00193  // ADDI x3, x0, -5         (x3 = -5)
+FFD00213  // ADDI x4, x0, -3         (x4 = -3)
+00000293  // ADDI x5, x0, 0          (x5 = 0)
+7FFFF317  // LUI x6, 0x7FFFF         (x6 = 0x7FFFF000)
+FFF31313  // ADDI x6, x6, 0xFFF      (x6 = 0x7FFFFFFF)
+80000397  // LUI x7, 0x80000         (x7 = 0x80000000)
+00100413  // ADDI x8, x0, 1          (x8 = 1)
+FFFFF497  // LUI x9, 0xFFFFF         (x9 = 0xFFFFF000)
+FFF48493  // ADDI x9, x9, 0xFFF      (x9 = 0xFFFFFFFF)
+
+// ============================================
+// Section 2: SLT Tests (Signed Comparison)
+// ============================================
+0010A533  // SLT x10, x2, x1         (x10 = (3 < 5) = 1)
+0040A5B3  // SLT x11, x1, x2         (x11 = (5 < 3) = 0)
+0010A633  // SLT x12, x1, x1         (x12 = (5 < 5) = 0)
+0041A6B3  // SLT x13, x3, x4         (x13 = (-5 < -3) = 1)
+0031A733  // SLT x14, x4, x3         (x14 = (-3 < -5) = 0)
+0011A7B3  // SLT x15, x3, x1         (x15 = (-5 < 5) = 1)
+0041A833  // SLT x16, x1, x3         (x16 = (5 < -5) = 0)
+0012A8B3  // SLT x17, x5, x1         (x17 = (0 < 5) = 1)
+0042A933  // SLT x18, x1, x5         (x18 = (5 < 0) = 0)
+0032A9B3  // SLT x19, x5, x3         (x19 = (0 < -5) = 0)
+0042AA33  // SLT x20, x3, x5         (x20 = (-5 < 0) = 1)
+0063AAB3  // SLT x21, x6, x7         (x21 = (0x7FFFFFFF < 0x80000000) = 0)
+0073AB33  // SLT x22, x7, x6         (x22 = (0x80000000 < 0x7FFFFFFF) = 1)
+0083AB33  // SLT x22, x7, x8         (x22 = (0x80000000 < 1) = 1)
+0093ABC3  // SLT x24, x6, x9         (x24 = (0x7FFFFFFF < 0xFFFFFFFF) = 0)
+
+// ============================================
+// Section 3: SLTU Tests (Unsigned Comparison)
+// ============================================
+0010BE33  // SLTU x30, x2, x1        (x30 = (3 < 5) = 1)
+0040BEB3  // SLTU x31, x1, x2        (x31 = (5 < 3) = 0)
+0010BCB3  // SLTU x25, x1, x1        (x25 = (5 < 5) = 0)
+0041BCD3  // SLTU x26, x3, x4        (x26 = (0xFFFFFFFB < 0xFFFFFFFD) = 1)
+0031CD33  // SLTU x27, x4, x3        (x27 = (0xFFFFFFFD < 0xFFFFFFFB) = 0)
+0011CE33  // SLTU x28, x3, x1        (x28 = (0xFFFFFFFB < 5) = 0)
+0041CEB3  // SLTU x29, x1, x3        (x29 = (5 < 0xFFFFFFFB) = 1)
+0012B533  // SLTU x10, x5, x1        (x10 = (0 < 5) = 1)
+0042B5B3  // SLTU x11, x1, x5        (x11 = (5 < 0) = 0)
+0032B633  // SLTU x12, x5, x3        (x12 = (0 < 0xFFFFFFFB) = 1)
+0042B6B3  // SLTU x13, x3, x5        (x13 = (0xFFFFFFFB < 0) = 0)
+0063B733  // SLTU x14, x6, x7        (x14 = (0x7FFFFFFF < 0x80000000) = 1)
+0073B7B3  // SLTU x15, x7, x6        (x15 = (0x80000000 < 0x7FFFFFFF) = 0)
+0083B833  // SLTU x16, x7, x8        (x16 = (0x80000000 < 1) = 0)
+0093B8B3  // SLTU x17, x6, x9        (x17 = (0x7FFFFFFF < 0xFFFFFFFF) = 1)
+
+// ============================================
+// Section 4: Store Results for Verification
+// ============================================
+00A02023  // SW x10, 0(x0)           (memory[0] = SLT result)
+00B02223  // SW x11, 4(x0)           (memory[1] = SLT result)
+00C02423  // SW x12, 8(x0)           (memory[2] = SLT result)
+00D02623  // SW x13, 12(x0)          (memory[3] = SLT result)
+00E02823  // SW x14, 16(x0)          (memory[4] = SLT result)
+00F02A23  // SW x15, 20(x0)          (memory[5] = SLT result)
+01002C23  // SW x16, 24(x0)          (memory[6] = SLT result)
+01102E23  // SW x17, 28(x0)          (memory[7] = SLT result)
+01202023  // SW x18, 32(x0)          (memory[8] = SLT result)
+01302223  // SW x19, 36(x0)          (memory[9] = SLT result)
+01402423  // SW x20, 40(x0)          (memory[10] = SLT result)
+01602623  // SW x22, 44(x0)          (memory[11] = SLT result)
+01802823  // SW x24, 48(x0)          (memory[12] = SLT result)
+01E02A23  // SW x30, 60(x0)          (memory[15] = SLTU result: 1)
+01F02C23  // SW x31, 64(x0)          (memory[16] = SLTU result: 0)
+01902E23  // SW x25, 68(x0)          (memory[17] = SLTU result: 0)
+01A02023  // SW x26, 72(x0)          (memory[18] = SLTU result: 1)
+01B02223  // SW x27, 76(x0)          (memory[19] = SLTU result: 0)
+01C02423  // SW x28, 80(x0)          (memory[20] = SLTU result: 0)
+01D02623  // SW x29, 84(x0)          (memory[21] = SLTU result: 1)
+00A02823  // SW x10, 88(x0)          (memory[22] = SLTU result: 1)
+00B02A23  // SW x11, 92(x0)          (memory[23] = SLTU result: 0)
+00C02C23  // SW x12, 96(x0)          (memory[24] = SLTU result: 1)
+00D02E23  // SW x13, 100(x0)         (memory[25] = SLTU result: 0)
+00E03023  // SW x14, 104(x0)         (memory[26] = SLTU result: 1)
+00F03223  // SW x15, 108(x0)         (memory[27] = SLTU result: 0)
+01003423  // SW x16, 112(x0)         (memory[28] = SLTU result: 0)
+01103623  // SW x17, 116(x0)         (memory[29] = SLTU result: 1)
+
+// ============================================
+// Section 5: Self-Checking Verification
+// ============================================
+00002083  // LW x1, 0(x0)            (Load SLT result)
+00100113  // ADDI x2, x0, 1          (Expected value)
+402081B3  // SUB x3, x1, x2          (x3 = 0 if correct)
+00303023  // SW x3, 120(x0)          (Store comparison)
+01002083  // LW x1, 16(x0)           (Load SLT result)
+00000113  // ADDI x2, x0, 0          (Expected value)
+402081B3  // SUB x3, x1, x2          (x3 = 0 if correct)
+00303223  // SW x3, 124(x0)          (Store comparison)
+05002083  // LW x1, 80(x0)           (Load SLTU result)
+00000113  // ADDI x2, x0, 0          (Expected value)
+402081B3  // SUB x3, x1, x2          (x3 = 0 if correct)
+00303423  // SW x3, 128(x0)          (Store comparison)
+05402083  // LW x1, 84(x0)           (Load SLTU result)
+00100113  // ADDI x2, x0, 1          (Expected value)
+402081B3  // SUB x3, x1, x2          (x3 = 0 if correct)
+00303623  // SW x3, 132(x0)          (Store comparison)
+
+// ============================================
+// End Marker
+// ============================================
+00000013  // ADDI x0, x0, 0          (NOP)
+00000013  // ADDI x0, x0, 0          (NOP)
+

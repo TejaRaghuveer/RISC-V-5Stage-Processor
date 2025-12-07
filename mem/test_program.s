@@ -1,3 +1,4 @@
+Create RISC-V assembly test program for logical operations: AND, OR, XOR, ANDI, ORI, XORI. Include bit masking examples, complement operations, and test cases with all 1s, all 0s, and alternating patterns. Provide assembly with expected results and hex machine code.
 # RISC-V Assembly Test Program
 # This file contains the assembly source code for reference
 # The actual machine code is in test_program.hex

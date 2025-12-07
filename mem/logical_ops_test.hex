@@ -1,0 +1,184 @@
+// RISC-V Logical Operations Test Program (Machine Code)
+// Tests bitwise logical operations: AND, OR, XOR, ANDI, ORI, XORI
+// Format: One 32-bit instruction per line (8 hex digits)
+
+// ============================================
+// Section 1: Initialize Test Patterns
+// ============================================
+0AA00093  // ADDI x1, x0, 0xAA        (x1 = 0x000000AA)
+00809093  // SLLI x1, x1, 8           (x1 = 0x0000AA00)
+0AA00113  // ADDI x2, x0, 0xAA        (x2 = 0x000000AA)
+0020E0B3  // OR x1, x1, x2            (x1 = 0x0000AAAA)
+01009093  // SLLI x1, x1, 16          (x1 = 0xAAAAAAAA)
+
+05500113  // ADDI x2, x0, 0x55        (x2 = 0x00000055)
+00811113  // SLLI x2, x2, 8           (x2 = 0x00005500)
+05500193  // ADDI x3, x0, 0x55        (x3 = 0x00000055)
+0031E133  // OR x2, x2, x3            (x2 = 0x00005555)
+01011113  // SLLI x2, x2, 16          (x2 = 0x55555555)
+
+FFF00193  // ADDI x3, x0, -1          (x3 = 0xFFFFFFFF)
+00000213  // ADDI x4, x0, 0           (x4 = 0x00000000)
+0FF00293  // ADDI x5, x0, 0xFF        (x5 = 0x000000FF)
+0F000313  // ADDI x6, x0, 0xF0        (x6 = 0x000000F0)
+00F00393  // ADDI x7, x0, 0x0F        (x7 = 0x0000000F)
+
+FFFFF417  // LUI x8, 0xFFFFF          (x8 = 0xFFFFF000)
+FFF40413  // ADDI x8, x8, 0xFFF       (x8 = 0xFFFFFFFF)
+
+23400493  // ADDI x9, x0, 0x1234      (x9 = 0x00001234)
+01049493  // SLLI x9, x9, 16          (x9 = 0x12340000)
+67800513  // ADDI x10, x0, 0x5678     (x10 = 0x00005678)
+00A4E4B3  // OR x9, x9, x10           (x9 = 0x12345678)
+
+// ============================================
+// Section 2: AND Operations (R-Type)
+// ============================================
+0020F5B3  // AND x11, x1, x2          (x11 = 0xAAAAAAAA & 0x55555555 = 0x00000000)
+0010F633  // AND x12, x1, x1          (x12 = 0xAAAAAAAA & 0xAAAAAAAA = 0xAAAAAAAA)
+0030F6B3  // AND x13, x1, x3          (x13 = 0xAAAAAAAA & 0xFFFFFFFF = 0xAAAAAAAA)
+0040F733  // AND x14, x1, x4          (x14 = 0xAAAAAAAA & 0x00000000 = 0x00000000)
+0020F7B3  // AND x15, x2, x2          (x15 = 0x55555555 & 0x55555555 = 0x55555555)
+0030F833  // AND x16, x2, x3          (x16 = 0x55555555 & 0xFFFFFFFF = 0x55555555)
+0030F8B3  // AND x17, x3, x3          (x17 = 0xFFFFFFFF & 0xFFFFFFFF = 0xFFFFFFFF)
+0040F933  // AND x18, x4, x4          (x18 = 0x00000000 & 0x00000000 = 0x00000000)
+
+0050F9B3  // AND x19, x9, x5          (x19 = 0x12345678 & 0x000000FF = 0x00000078)
+0060FA33  // AND x20, x9, x6          (x20 = 0x12345678 & 0x000000F0 = 0x00000070)
+0070FAB3  // AND x21, x9, x7          (x21 = 0x12345678 & 0x0000000F = 0x00000008)
+
+// ============================================
+// Section 3: OR Operations (R-Type)
+// ============================================
+0020EB33  // OR x22, x1, x2           (x22 = 0xAAAAAAAA | 0x55555555 = 0xFFFFFFFF)
+0010EBB3  // OR x23, x1, x1           (x23 = 0xAAAAAAAA | 0xAAAAAAAA = 0xAAAAAAAA)
+0030EC33  // OR x24, x1, x3           (x24 = 0xAAAAAAAA | 0xFFFFFFFF = 0xFFFFFFFF)
+0040ECB3  // OR x25, x1, x4           (x25 = 0xAAAAAAAA | 0x00000000 = 0xAAAAAAAA)
+0020ED33  // OR x26, x2, x2           (x26 = 0x55555555 | 0x55555555 = 0x55555555)
+0030EDB3  // OR x27, x2, x3           (x27 = 0x55555555 | 0xFFFFFFFF = 0xFFFFFFFF)
+0030EE33  // OR x28, x3, x3           (x28 = 0xFFFFFFFF | 0xFFFFFFFF = 0xFFFFFFFF)
+0040EEB3  // OR x29, x4, x4           (x29 = 0x00000000 | 0x00000000 = 0x00000000)
+
+0050EF33  // OR x30, x9, x5           (x30 = 0x12345678 | 0x000000FF = 0x123456FF)
+0010EFB3  // OR x31, x1, x4           (x31 = 0x00000000 | 0xAAAAAAAA = 0xAAAAAAAA)
+
+// ============================================
+// Section 4: XOR Operations (R-Type)
+// ============================================
+0020C533  // XOR x10, x1, x2          (x10 = 0xAAAAAAAA ^ 0x55555555 = 0xFFFFFFFF)
+0010C5B3  // XOR x11, x1, x1          (x11 = 0xAAAAAAAA ^ 0xAAAAAAAA = 0x00000000)
+0030C633  // XOR x12, x1, x3          (x12 = 0xAAAAAAAA ^ 0xFFFFFFFF = 0x55555555)
+0040C6B3  // XOR x13, x1, x4          (x13 = 0xAAAAAAAA ^ 0x00000000 = 0xAAAAAAAA)
+0020C733  // XOR x14, x2, x2          (x14 = 0x55555555 ^ 0x55555555 = 0x00000000)
+0030C7B3  // XOR x15, x2, x3          (x15 = 0x55555555 ^ 0xFFFFFFFF = 0xAAAAAAAA)
+0030C833  // XOR x16, x3, x3          (x16 = 0xFFFFFFFF ^ 0xFFFFFFFF = 0x00000000)
+0040C8B3  // XOR x17, x4, x4          (x17 = 0x00000000 ^ 0x00000000 = 0x00000000)
+
+0030C933  // XOR x18, x9, x3          (x18 = 0x12345678 ^ 0xFFFFFFFF = 0xEDCBA987)
+0010C9B3  // XOR x19, x1, x3          (x19 = 0xAAAAAAAA ^ 0xFFFFFFFF = 0x55555555)
+0020CA33  // XOR x20, x2, x3          (x20 = 0x55555555 ^ 0xFFFFFFFF = 0xAAAAAAAA)
+
+0050CAB3  // XOR x21, x9, x5          (x21 = 0x12345678 ^ 0x000000FF = 0x12345687)
+
+// ============================================
+// Section 5: ANDI Operations (I-Type)
+// ============================================
+5550AB33  // ANDI x22, x1, 0x555      (x22 = 0xAAAAAAAA & 0x555 = 0x00000000)
+AAA0ABB3  // ANDI x23, x1, 0xAAA      (x23 = 0xAAAAAAAA & 0xAAA = 0x00000AAA)
+5550AC33  // ANDI x24, x2, 0x555      (x24 = 0x55555555 & 0x555 = 0x00000555)
+AAA0ACB3  // ANDI x25, x2, 0xAAA      (x25 = 0x55555555 & 0xAAA = 0x00000000)
+FFF0AD33  // ANDI x26, x3, 0xFFF      (x26 = 0xFFFFFFFF & 0xFFF = 0x00000FFF)
+FFF0ADB3  // ANDI x27, x4, 0xFFF      (x27 = 0x00000000 & 0xFFF = 0x00000000)
+
+0FF0AE33  // ANDI x28, x9, 0xFF       (x28 = 0x12345678 & 0xFF = 0x00000078)
+0F00AEB3  // ANDI x29, x9, 0xF0       (x29 = 0x12345678 & 0xF0 = 0x00000070)
+00F0AF33  // ANDI x30, x9, 0x0F       (x30 = 0x12345678 & 0x0F = 0x00000008)
+7FF0AFB3  // ANDI x31, x9, 0x7FF      (x31 = 0x12345678 & 0x7FF = 0x00000678)
+
+// ============================================
+// Section 6: ORI Operations (I-Type)
+// ============================================
+5550E533  // ORI x10, x1, 0x555       (x10 = 0xAAAAAAAA | 0x555 = 0xAAAAAFFF)
+AAA0E5B3  // ORI x11, x1, 0xAAA       (x11 = 0xAAAAAAAA | 0xAAA = 0xAAAAAABA)
+5550E633  // ORI x12, x2, 0x555       (x12 = 0x55555555 | 0x555 = 0x55555FFF)
+AAA0E6B3  // ORI x13, x2, 0xAAA       (x13 = 0x55555555 | 0xAAA = 0x55555FFF)
+FFF0E733  // ORI x14, x3, 0xFFF       (x14 = 0xFFFFFFFF | 0xFFF = 0xFFFFFFFF)
+FFF0E7B3  // ORI x15, x4, 0xFFF       (x15 = 0x00000000 | 0xFFF = 0x00000FFF)
+
+0FF0E833  // ORI x16, x9, 0xFF        (x16 = 0x12345678 | 0xFF = 0x123456FF)
+AAA0E8B3  // ORI x17, x4, 0xAAA       (x17 = 0x00000000 | 0xAAA = 0x00000AAA)
+0F00E933  // ORI x18, x9, 0xF0        (x18 = 0x12345678 | 0xF0 = 0x123456F8)
+
+// ============================================
+// Section 7: XORI Operations (I-Type)
+// ============================================
+5550C933  // XORI x19, x1, 0x555      (x19 = 0xAAAAAAAA ^ 0x555 = 0xAAAAAFFF)
+AAA0C9B3  // XORI x20, x1, 0xAAA      (x20 = 0xAAAAAAAA ^ 0xAAA = 0xAAAAA000)
+5550CA33  // XORI x21, x2, 0x555      (x21 = 0x55555555 ^ 0x555 = 0x55555000)
+AAA0CAB3  // XORI x22, x2, 0xAAA      (x22 = 0x55555555 ^ 0xAAA = 0x55555FFF)
+FFF0CB33  // XORI x23, x3, 0xFFF       (x23 = 0xFFFFFFFF ^ 0xFFF = 0xFFFFF000)
+FFF0CBB3  // XORI x24, x4, 0xFFF       (x24 = 0x00000000 ^ 0xFFF = 0x00000FFF)
+
+FFF0CC33  // XORI x25, x9, 0xFFF       (x25 = 0x12345678 ^ 0xFFF = 0x12345887)
+FFF0CCB3  // XORI x26, x1, 0xFFF       (x26 = 0xAAAAAAAA ^ 0xFFF = 0xAAAAA555)
+0FF0CD33  // XORI x27, x9, 0xFF        (x27 = 0x12345678 ^ 0xFF = 0x12345687)
+
+// ============================================
+// Section 8: Store Results for Verification
+// ============================================
+00B02023  // SW x11, 0(x0)            (memory[0] = 0x00000000)
+00C02223  // SW x12, 4(x0)            (memory[1] = 0xAAAAAAAA)
+00D02423  // SW x13, 8(x0)            (memory[2] = 0xAAAAAAAA)
+00E02623  // SW x14, 12(x0)           (memory[3] = 0x00000000)
+01302823  // SW x19, 16(x0)           (memory[4] = 0x00000078)
+
+01602A23  // SW x22, 20(x0)           (memory[5] = 0xFFFFFFFF)
+01702C23  // SW x23, 24(x0)           (memory[6] = 0xAAAAAAAA)
+01802E23  // SW x24, 28(x0)           (memory[7] = 0xFFFFFFFF)
+01902023  // SW x25, 32(x0)           (memory[8] = 0xAAAAAAAA)
+01E02223  // SW x30, 36(x0)           (memory[9] = 0x123456FF)
+
+00A02423  // SW x10, 40(x0)           (memory[10] = 0xFFFFFFFF)
+00B02623  // SW x11, 44(x0)           (memory[11] = 0x00000000)
+00C02823  // SW x12, 48(x0)           (memory[12] = 0x55555555)
+01202A23  // SW x18, 52(x0)           (memory[13] = 0xEDCBA987)
+
+01C02C23  // SW x28, 56(x0)           (memory[14] = 0x00000078)
+01D02E23  // SW x29, 60(x0)           (memory[15] = 0x00000070)
+01E02023  // SW x30, 64(x0)           (memory[16] = 0x00000008)
+
+01002223  // SW x16, 68(x0)           (memory[17] = 0x123456FF)
+01102423  // SW x17, 72(x0)           (memory[18] = 0x00000AAA)
+
+01902623  // SW x25, 76(x0)           (memory[19] = 0x12345887)
+01B02823  // SW x27, 80(x0)           (memory[20] = 0x12345687)
+
+// ============================================
+// Section 9: Self-Checking Verification
+// ============================================
+00002083  // LW x1, 0(x0)             (Load result)
+00000113  // ADDI x2, x0, 0           (Expected value)
+402081B3  // SUB x3, x1, x2          (x3 = 0 if correct)
+00302A23  // SW x3, 84(x0)            (Store comparison)
+
+01402083  // LW x1, 20(x0)            (Load result)
+FFF00113  // ADDI x2, x0, -1          (Expected value)
+402081B3  // SUB x3, x1, x2           (x3 = 0 if correct)
+00302C23  // SW x3, 88(x0)            (Store comparison)
+
+02802083  // LW x1, 40(x0)            (Load result)
+FFF00113  // ADDI x2, x0, -1          (Expected value)
+402081B3  // SUB x3, x1, x2           (x3 = 0 if correct)
+00302E23  // SW x3, 92(x0)            (Store comparison)
+
+03802083  // LW x1, 56(x0)            (Load result)
+07800113  // ADDI x2, x0, 0x78        (Expected value)
+402081B3  // SUB x3, x1, x2           (x3 = 0 if correct)
+00303023  // SW x3, 96(x0)            (Store comparison)
+
+// ============================================
+// End Marker
+// ============================================
+00000013  // ADDI x0, x0, 0           (NOP)
+00000013  // ADDI x0, x0, 0           (NOP)
+
