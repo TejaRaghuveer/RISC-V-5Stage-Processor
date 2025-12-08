@@ -1,0 +1,138 @@
+// RISC-V RAW Data Hazard Test Program (Machine Code)
+// Tests Read-After-Write (RAW) data hazards and forwarding mechanisms
+// Format: One 32-bit instruction per line (8 hex digits)
+//
+// Hazard Types Tested:
+//   1. EX Hazard: Forward from EX/MEM stage (ForwardA/ForwardB = 2'b10)
+//   2. MEM Hazard: Forward from MEM/WB stage (ForwardA/ForwardB = 2'b01)
+//   3. Load-Use Hazard: Pipeline stall required
+
+// ============================================
+// Section 1: Initialize Test Values
+// ============================================
+00A00093  // ADDI x1, x0, 10        (x1 = 10)
+01400113  // ADDI x2, x0, 20        (x2 = 20)
+01E00193  // ADDI x3, x0, 30        (x3 = 30)
+00000213  // ADDI x4, x0, 0         (x4 = 0)
+
+// ============================================
+// Section 2: EX Hazard Test (Forward from EX/MEM)
+// ============================================
+// Test Case 2.1: rs1 dependency (ForwardA)
+00500293  // ADDI x5, x0, 5         (x5 = 5)
+01428333  // ADD x6, x5, x2         [EX HAZARD] x6 = x5 + x2 = 25 (ForwardA = 10)
+
+// Test Case 2.2: rs2 dependency (ForwardB)
+00700393  // ADDI x7, x0, 7         (x7 = 7)
+00710433  // ADD x8, x2, x7         [EX HAZARD] x8 = x2 + x7 = 27 (ForwardB = 10)
+
+// Test Case 2.3: Both rs1 and rs2 dependencies
+00900493  // ADDI x9, x0, 9         (x9 = 9)
+00B00513  // ADDI x10, x0, 11       (x10 = 11)
+00A485B3  // ADD x11, x9, x10       [EX HAZARD] x11 = x9 + x10 = 20 (ForwardA=10, ForwardB=10)
+
+// Test Case 2.4: Chain of EX hazards
+00C00613  // ADDI x12, x0, 12       (x12 = 12)
+000606B3  // ADD x13, x12, x0       [EX HAZARD] x13 = 12 (ForwardA = 10)
+00068733  // ADD x14, x13, x0       [EX HAZARD] x14 = 12 (ForwardA = 10)
+000707B3  // ADD x15, x14, x0       [EX HAZARD] x15 = 12 (ForwardA = 10)
+
+// ============================================
+// Section 3: MEM Hazard Test (Forward from MEM/WB)
+// ============================================
+// Test Case 3.1: rs1 dependency (ForwardA)
+01000813  // ADDI x16, x0, 16       (x16 = 16)
+01100893  // ADDI x17, x0, 17       (x17 = 17, independent instruction)
+01480933  // ADD x18, x16, x2       [MEM HAZARD] x18 = 16 + 20 = 36 (ForwardA = 01)
+
+// Test Case 3.2: rs2 dependency (ForwardB)
+01300993  // ADDI x19, x0, 19       (x19 = 19)
+01400A13  // ADDI x20, x0, 20       (x20 = 20, independent instruction)
+013105B3  // ADD x21, x2, x19       [MEM HAZARD] x21 = 20 + 19 = 39 (ForwardB = 01)
+
+// Test Case 3.3: Both rs1 and rs2 dependencies
+01600A93  // ADDI x22, x0, 22       (x22 = 22)
+01700B13  // ADDI x23, x0, 23       (x23 = 23)
+01800C13  // ADDI x24, x0, 24       (x24 = 24, independent instruction)
+017B0CB3  // ADD x25, x22, x23      [MEM HAZARD] x25 = 22 + 23 = 45 (ForwardA=01, ForwardB=01)
+
+// Test Case 3.4: Mixed EX and MEM hazards
+01A00D13  // ADDI x26, x0, 26       (x26 = 26)
+01B00D93  // ADDI x27, x0, 27       (x27 = 27)
+01BD1E33  // ADD x28, x26, x27      [MIXED HAZARD] x28 = 26 + 27 = 53 (ForwardA=01, ForwardB=10)
+
+// ============================================
+// Section 4: Load-Use Hazard Test (Pipeline Stall)
+// ============================================
+// Initialize memory base address
+00000E93  // ADDI x29, x0, 0        (x29 = 0, memory base)
+
+// Test Case 4.1: Load-use hazard with rs1 dependency
+001EA023  // SW x1, 0(x29)          (Store x1 (10) to memory[0])
+000EAF03  // LW x30, 0(x29)         (Load from memory[0] into x30)
+014F0FB3  // ADD x31, x30, x2       [LOAD-USE HAZARD] x31 = x30 + x2 (stall occurs)
+
+// Test Case 4.2: Load-use hazard with rs2 dependency
+002EA223  // SW x2, 4(x29)          (Store x2 (20) to memory[1])
+0040A0F3  // LW x1, 4(x29)          (Load from memory[1] into x1)
+00118133  // ADD x2, x3, x1         [LOAD-USE HAZARD] x2 = x3 + x1 (stall occurs)
+
+// Test Case 4.3: Load-use hazard with both rs1 and rs2 dependencies
+003EA423  // SW x3, 8(x29)          (Store x3 to memory[2])
+02800213  // ADDI x4, x0, 40        (x4 = 40, independent instruction)
+0080A2F3  // LW x5, 8(x29)          (Load from memory[2] into x5)
+00528333  // ADD x6, x5, x5         [LOAD-USE HAZARD] x6 = x5 + x5 (stall occurs)
+
+// Test Case 4.4: Load-use hazard followed by normal forwarding
+001EA623  // SW x1, 12(x29)         (Store x1 to memory[3])
+00C0A3F3  // LW x7, 12(x29)         (Load from memory[3] into x7)
+00038433  // ADD x8, x7, x0         [LOAD-USE HAZARD] x8 = x7 + 0 (stall occurs)
+000404B3  // ADD x9, x8, x0         [EX HAZARD] x9 = x8 + 0 (forward from EX/MEM, ForwardA=10)
+
+// ============================================
+// Section 5: Complex Hazard Scenarios
+// ============================================
+// Test Case 5.1: Multiple consecutive EX hazards
+06400513  // ADDI x10, x0, 100      (x10 = 100)
+000505B3  // ADD x11, x10, x0       [EX HAZARD] x11 = 100 (ForwardA = 10)
+00058633  // ADD x12, x11, x0       [EX HAZARD] x12 = 100 (ForwardA = 10)
+000606B3  // ADD x13, x12, x0       [EX HAZARD] x13 = 100 (ForwardA = 10)
+00068733  // ADD x14, x13, x0       [EX HAZARD] x14 = 100 (ForwardA = 10)
+
+// Test Case 5.2: Arithmetic operations with hazards
+00F00793  // ADDI x15, x0, 15       (x15 = 15)
+01000813  // ADDI x16, x0, 16       (x16 = 16)
+010788B3  // ADD x17, x15, x16      [EX HAZARD] x17 = 15 + 16 = 31 (ForwardA=10, ForwardB=10)
+00F88933  // SUB x18, x17, x15      [EX HAZARD] x18 = 31 - 15 = 16 (ForwardA=10)
+012889B3  // AND x19, x17, x18      [MEM HAZARD] x19 = 31 & 16 = 16 (ForwardA=01, ForwardB=10)
+01198A33  // OR x20, x19, x17       [MEM HAZARD] x20 = 16 | 31 = 31 (ForwardA=01, ForwardB=01)
+
+// Test Case 5.3: Store instruction with hazard (no stall needed)
+01500A93  // ADDI x21, x0, 21       (x21 = 21)
+015EA823  // SW x21, 16(x29)        (Store x21 to memory[4])
+
+// ============================================
+// Section 6: Verification and Results
+// ============================================
+// Store final results to memory for verification
+// Note: x29 is now 21, so we need to recalculate base address
+00000E93  // ADDI x29, x0, 0        (x29 = 0, restore memory base)
+006EA823  // SW x6, 20(x29)         (Store EX hazard test result: x6 = 25)
+008EAC23  // SW x8, 24(x29)         (Store EX hazard test result: x8 = 27)
+00BEB023  // SW x11, 28(x29)        (Store EX hazard test result: x11 = 20)
+012EB423  // SW x18, 32(x29)        (Store MEM hazard test result: x18 = 36)
+015EB823  // SW x21, 36(x29)        (Store MEM hazard test result: x21 = 39)
+019EBC23  // SW x25, 40(x29)        (Store MEM hazard test result: x25 = 45)
+01FEC023  // SW x31, 44(x29)        (Store load-use hazard test result: x31 = 30)
+002EC423  // SW x2, 48(x29)         (Store load-use hazard test result: x2 = 50)
+006EC823  // SW x6, 52(x29)         (Store load-use hazard test result: x6 = 60)
+011EC023  // SW x17, 56(x29)        (Store complex hazard test result: x17 = 31)
+014EC423  // SW x20, 60(x29)        (Store complex hazard test result: x20 = 31)
+
+// ============================================
+// Section 7: End Marker
+// ============================================
+00000013  // ADDI x0, x0, 0         (NOP)
+00000013  // ADDI x0, x0, 0         (NOP)
+00000013  // ADDI x0, x0, 0         (NOP)
+

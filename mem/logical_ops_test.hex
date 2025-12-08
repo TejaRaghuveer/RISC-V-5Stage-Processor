@@ -83,45 +83,45 @@ FFF40413  // ADDI x8, x8, 0xFFF       (x8 = 0xFFFFFFFF)
 // ============================================
 // Section 5: ANDI Operations (I-Type)
 // ============================================
-5550AB33  // ANDI x22, x1, 0x555      (x22 = 0xAAAAAAAA & 0x555 = 0x00000000)
-AAA0ABB3  // ANDI x23, x1, 0xAAA      (x23 = 0xAAAAAAAA & 0xAAA = 0x00000AAA)
-5550AC33  // ANDI x24, x2, 0x555      (x24 = 0x55555555 & 0x555 = 0x00000555)
-AAA0ACB3  // ANDI x25, x2, 0xAAA      (x25 = 0x55555555 & 0xAAA = 0x00000000)
-FFF0AD33  // ANDI x26, x3, 0xFFF      (x26 = 0xFFFFFFFF & 0xFFF = 0x00000FFF)
-FFF0ADB3  // ANDI x27, x4, 0xFFF      (x27 = 0x00000000 & 0xFFF = 0x00000000)
+5550AB13  // ANDI x22, x1, 0x555      (x22 = 0xAAAAAAAA & 0x555 = 0x00000000)
+AAA0AB93  // ANDI x23, x1, 0xAAA      (x23 = 0xAAAAAAAA & 0xAAA = 0x00000AAA)
+5550AC13  // ANDI x24, x2, 0x555      (x24 = 0x55555555 & 0x555 = 0x00000555)
+AAA0AC93  // ANDI x25, x2, 0xAAA      (x25 = 0x55555555 & 0xAAA = 0x00000000)
+FFF0AD13  // ANDI x26, x3, 0xFFF      (x26 = 0xFFFFFFFF & 0xFFF = 0x00000FFF)
+FFF0AD93  // ANDI x27, x4, 0xFFF      (x27 = 0x00000000 & 0xFFF = 0x00000000)
 
-0FF0AE33  // ANDI x28, x9, 0xFF       (x28 = 0x12345678 & 0xFF = 0x00000078)
-0F00AEB3  // ANDI x29, x9, 0xF0       (x29 = 0x12345678 & 0xF0 = 0x00000070)
-00F0AF33  // ANDI x30, x9, 0x0F       (x30 = 0x12345678 & 0x0F = 0x00000008)
-7FF0AFB3  // ANDI x31, x9, 0x7FF      (x31 = 0x12345678 & 0x7FF = 0x00000678)
+0FF0AE13  // ANDI x28, x9, 0xFF       (x28 = 0x12345678 & 0xFF = 0x00000078)
+0F00AE93  // ANDI x29, x9, 0xF0       (x29 = 0x12345678 & 0xF0 = 0x00000070)
+00F0AF13  // ANDI x30, x9, 0x0F       (x30 = 0x12345678 & 0x0F = 0x00000008)
+7FF0AF93  // ANDI x31, x9, 0x7FF      (x31 = 0x12345678 & 0x7FF = 0x00000678)
 
 // ============================================
 // Section 6: ORI Operations (I-Type)
 // ============================================
-5550E533  // ORI x10, x1, 0x555       (x10 = 0xAAAAAAAA | 0x555 = 0xAAAAAFFF)
-AAA0E5B3  // ORI x11, x1, 0xAAA       (x11 = 0xAAAAAAAA | 0xAAA = 0xAAAAAABA)
-5550E633  // ORI x12, x2, 0x555       (x12 = 0x55555555 | 0x555 = 0x55555FFF)
-AAA0E6B3  // ORI x13, x2, 0xAAA       (x13 = 0x55555555 | 0xAAA = 0x55555FFF)
-FFF0E733  // ORI x14, x3, 0xFFF       (x14 = 0xFFFFFFFF | 0xFFF = 0xFFFFFFFF)
-FFF0E7B3  // ORI x15, x4, 0xFFF       (x15 = 0x00000000 | 0xFFF = 0x00000FFF)
+5550E513  // ORI x10, x1, 0x555       (x10 = 0xAAAAAAAA | 0x555 = 0xAAAAAFFF)
+AAA0E593  // ORI x11, x1, 0xAAA       (x11 = 0xAAAAAAAA | 0xAAA = 0xAAAAAABA)
+5550E613  // ORI x12, x2, 0x555       (x12 = 0x55555555 | 0x555 = 0x55555FFF)
+AAA0E693  // ORI x13, x2, 0xAAA       (x13 = 0x55555555 | 0xAAA = 0x55555FFF)
+FFF0E713  // ORI x14, x3, 0xFFF       (x14 = 0xFFFFFFFF | 0xFFF = 0xFFFFFFFF)
+FFF0E793  // ORI x15, x4, 0xFFF       (x15 = 0x00000000 | 0xFFF = 0x00000FFF)
 
-0FF0E833  // ORI x16, x9, 0xFF        (x16 = 0x12345678 | 0xFF = 0x123456FF)
-AAA0E8B3  // ORI x17, x4, 0xAAA       (x17 = 0x00000000 | 0xAAA = 0x00000AAA)
-0F00E933  // ORI x18, x9, 0xF0        (x18 = 0x12345678 | 0xF0 = 0x123456F8)
+0FF0E813  // ORI x16, x9, 0xFF        (x16 = 0x12345678 | 0xFF = 0x123456FF)
+AAA0E893  // ORI x17, x4, 0xAAA       (x17 = 0x00000000 | 0xAAA = 0x00000AAA)
+0F00E913  // ORI x18, x9, 0xF0        (x18 = 0x12345678 | 0xF0 = 0x123456F8)
 
 // ============================================
 // Section 7: XORI Operations (I-Type)
 // ============================================
-5550C933  // XORI x19, x1, 0x555      (x19 = 0xAAAAAAAA ^ 0x555 = 0xAAAAAFFF)
-AAA0C9B3  // XORI x20, x1, 0xAAA      (x20 = 0xAAAAAAAA ^ 0xAAA = 0xAAAAA000)
-5550CA33  // XORI x21, x2, 0x555      (x21 = 0x55555555 ^ 0x555 = 0x55555000)
-AAA0CAB3  // XORI x22, x2, 0xAAA      (x22 = 0x55555555 ^ 0xAAA = 0x55555FFF)
-FFF0CB33  // XORI x23, x3, 0xFFF       (x23 = 0xFFFFFFFF ^ 0xFFF = 0xFFFFF000)
-FFF0CBB3  // XORI x24, x4, 0xFFF       (x24 = 0x00000000 ^ 0xFFF = 0x00000FFF)
+5550C913  // XORI x19, x1, 0x555      (x19 = 0xAAAAAAAA ^ 0x555 = 0xAAAAAFFF)
+AAA0C993  // XORI x20, x1, 0xAAA      (x20 = 0xAAAAAAAA ^ 0xAAA = 0xAAAAA000)
+5550CA13  // XORI x21, x2, 0x555      (x21 = 0x55555555 ^ 0x555 = 0x55555000)
+AAA0CA93  // XORI x22, x2, 0xAAA      (x22 = 0x55555555 ^ 0xAAA = 0x55555FFF)
+FFF0CB13  // XORI x23, x3, 0xFFF       (x23 = 0xFFFFFFFF ^ 0xFFF = 0xFFFFF000)
+FFF0CB93  // XORI x24, x4, 0xFFF       (x24 = 0x00000000 ^ 0xFFF = 0x00000FFF)
 
-FFF0CC33  // XORI x25, x9, 0xFFF       (x25 = 0x12345678 ^ 0xFFF = 0x12345887)
-FFF0CCB3  // XORI x26, x1, 0xFFF       (x26 = 0xAAAAAAAA ^ 0xFFF = 0xAAAAA555)
-0FF0CD33  // XORI x27, x9, 0xFF        (x27 = 0x12345678 ^ 0xFF = 0x12345687)
+FFF0CC13  // XORI x25, x9, 0xFFF       (x25 = 0x12345678 ^ 0xFFF = 0x12345887)
+FFF0CC93  // XORI x26, x1, 0xFFF       (x26 = 0xAAAAAAAA ^ 0xFFF = 0xAAAAA555)
+0FF0CD13  // XORI x27, x9, 0xFF        (x27 = 0x12345678 ^ 0xFF = 0x12345687)
 
 // ============================================
 // Section 8: Store Results for Verification
