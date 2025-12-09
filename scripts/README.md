@@ -1,96 +1,229 @@
-# Simulation Scripts
+# RISC-V Random Instruction Generator
 
-This directory contains simulation scripts for the RISC-V processor project.
+A Python script to generate random RISC-V RV32I instruction sequences for processor testing.
 
-## ALU Simulation Script
+## Features
 
-### `simulate_alu.sh`
+- **Random Instruction Generation**: Generates random instructions from all major RV32I instruction types
+- **Configurable Instruction Mix**: Control the percentage of each instruction type
+- **Reproducible**: Uses random seeds for reproducible test sequences
+- **Valid Encodings**: Generates properly encoded RISC-V machine code
+- **Realistic Sequences**: Uses valid register addresses (x1-x31) and immediate values
 
-A comprehensive bash script to compile and simulate the ALU module and testbench.
+## Supported Instructions
 
-### Prerequisites
+### Arithmetic (R-type)
+- ADD, SUB
 
-**For ModelSim/QuestaSim:**
-- ModelSim or QuestaSim installed and in PATH
-- Commands: `vlog`, `vsim`
+### Logical (R-type)
+- AND, OR, XOR
 
-**For Icarus Verilog:**
-- Icarus Verilog installed
-- Commands: `iverilog`, `vvp`
-- Optional: GTKWave for waveform viewing
+### Immediate (I-type)
+- ADDI, ANDI, ORI, XORI
 
-### Installation
+### Memory Operations
+- LW (Load Word)
+- SW (Store Word)
 
-**Linux:**
-```bash
-sudo apt-get install iverilog gtkwave
-```
+### Control Flow
+- BEQ, BNE, BLT, BGE, BLTU, BGEU (Branch)
+- JAL (Jump and Link)
+- JALR (Jump and Link Register)
 
-**macOS:**
-```bash
-brew install icarus-verilog gtkwave
-```
+## Usage
 
-**Windows:**
-- Use Git Bash or WSL (Windows Subsystem for Linux)
-- Install Icarus Verilog through WSL or use ModelSim
-
-### Usage
+### Basic Usage
 
 ```bash
-# Make executable (Linux/macOS/Git Bash)
-chmod +x scripts/simulate_alu.sh
+# Generate 100 instructions with default mix
+python scripts/generate_random_test.py --length 100 --output mem/random_test.hex
 
-# Run with auto-detection
-./scripts/simulate_alu.sh
-
-# Force specific simulator
-./scripts/simulate_alu.sh modelsim
-./scripts/simulate_alu.sh iverilog
-
-# Skip waveform viewer
-./scripts/simulate_alu.sh --no-waveform
-
-# Clean before simulation
-./scripts/simulate_alu.sh --clean
-
-# Show help
-./scripts/simulate_alu.sh --help
+# Generate with specific seed for reproducibility
+python scripts/generate_random_test.py --length 200 --seed 42 --output mem/test.hex
 ```
 
-### Features
+### Using Configuration File
 
-- **Auto-detection**: Automatically detects available simulator
-- **Dual support**: Works with both ModelSim and Icarus Verilog
-- **Waveform generation**: Creates VCD files for waveform analysis
-- **Auto-open viewer**: Opens GTKWave or ModelSim waveform viewer
-- **Clean option**: Removes previous simulation files
-- **Colored output**: Easy-to-read colored terminal output
-- **Error handling**: Comprehensive error checking and reporting
-
-### Output Files
-
-Simulation files are stored in `simulation/` directory:
-- `simulation.log`: Simulation output log
-- `alu_tb.vcd`: VCD waveform file (Icarus Verilog)
-- `alu_tb.wlf`: ModelSim waveform file (ModelSim)
-
-### Troubleshooting
-
-**Script not executable:**
 ```bash
-chmod +x scripts/simulate_alu.sh
+# Use custom instruction mix from config file
+python scripts/generate_random_test.py --length 100 --config scripts/config_example.txt
 ```
 
-**Simulator not found:**
-- Ensure simulator is installed and in PATH
-- Check with: `which iverilog` or `which vsim`
+### Command-Line Overrides
 
-**Waveform viewer not opening:**
-- Install GTKWave: `sudo apt-get install gtkwave` (Linux)
-- Or use `--no-waveform` flag to skip viewer
+```bash
+# Override specific instruction percentages
+python scripts/generate_random_test.py \
+    --length 100 \
+    --r-type 30 \
+    --i-type 25 \
+    --branch 20 \
+    --load 10 \
+    --store 10 \
+    --jal 3 \
+    --jalr 2
+```
 
-**Compilation errors:**
-- Check that source files exist in `src/` and `tb/` directories
-- Verify SystemVerilog syntax compatibility
+## Command-Line Options
 
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--length N` | Number of instructions to generate | 100 |
+| `--output FILE` | Output hex file path | `mem/random_test.hex` |
+| `--seed N` | Random seed for reproducibility | Random |
+| `--config FILE` | Configuration file for instruction mix | None |
+| `--r-type N` | Percentage of R-type instructions | 20 |
+| `--i-type N` | Percentage of I-type instructions | 25 |
+| `--load N` | Percentage of load instructions | 10 |
+| `--store N` | Percentage of store instructions | 10 |
+| `--branch N` | Percentage of branch instructions | 20 |
+| `--jal N` | Percentage of JAL instructions | 5 |
+| `--jalr N` | Percentage of JALR instructions | 10 |
+
+## Configuration File Format
+
+Create a text file with instruction mix percentages:
+
+```
+R_TYPE: 20
+I_TYPE: 25
+LOAD: 10
+STORE: 10
+BRANCH: 20
+JAL: 5
+JALR: 10
+```
+
+Percentages should sum to 100. Lines starting with `#` are comments.
+
+## Output Format
+
+The script generates a hex file with the following format:
+
+```
+// RISC-V Random Instruction Sequence
+// Generated by generate_random_test.py
+// Format: One 32-bit instruction per line (8 hex digits)
+
+002081B3  // ADD x3, x1, x2
+00500093  // ADDI x1, x0, 5
+00002503  // LW x10, 0(x0)
+...
+```
+
+Each line contains:
+- 8-digit hexadecimal instruction encoding
+- Assembly mnemonic comment
+
+## Example Configurations
+
+### Arithmetic-Heavy Test
+
+```bash
+python scripts/generate_random_test.py \
+    --length 200 \
+    --r-type 40 \
+    --i-type 30 \
+    --load 5 \
+    --store 5 \
+    --branch 15 \
+    --jal 3 \
+    --jalr 2 \
+    --seed 12345 \
+    --output mem/arithmetic_test.hex
+```
+
+### Control-Flow Heavy Test
+
+```bash
+python scripts/generate_random_test.py \
+    --length 200 \
+    --r-type 10 \
+    --i-type 15 \
+    --load 5 \
+    --store 5 \
+    --branch 40 \
+    --jal 15 \
+    --jalr 10 \
+    --seed 67890 \
+    --output mem/controlflow_test.hex
+```
+
+### Memory-Intensive Test
+
+```bash
+python scripts/generate_random_test.py \
+    --length 200 \
+    --r-type 15 \
+    --i-type 15 \
+    --load 30 \
+    --store 30 \
+    --branch 5 \
+    --jal 2 \
+    --jalr 3 \
+    --seed 11111 \
+    --output mem/memory_test.hex
+```
+
+## Implementation Details
+
+### Register Selection
+- Uses registers x1 through x31 (x0 is hardwired to zero)
+- Avoids using the same register as source and destination when appropriate
+- Uses x2 (sp - stack pointer) as common base for memory operations
+
+### Immediate Values
+- **12-bit signed**: -2048 to 2047 (for I-type, load/store, JALR)
+- **20-bit signed**: -524288 to 524287 (for JAL)
+- Memory offsets are word-aligned (multiples of 4)
+
+### Address Generation
+- Memory addresses are word-aligned
+- Branch and jump offsets are calculated relative to instruction position
+- Offsets are limited to reasonable ranges to avoid out-of-bounds jumps
+
+### Instruction Encoding
+- All instructions are properly encoded according to RISC-V RV32I specification
+- Sign extension applied where required
+- Function codes (funct3, funct7) correctly set
+
+## Integration with Testbench
+
+The generated hex file can be loaded directly into instruction memory:
+
+```systemverilog
+// In testbench
+initial begin
+    $readmemh("mem/random_test.hex", uut.if_stage_inst.imem_inst.memory);
+end
+```
+
+## Limitations
+
+1. **No Forwarding Tests**: Random sequences don't guarantee specific hazard patterns
+2. **No Structured Control Flow**: Branches and jumps are random, not structured programs
+3. **No Data Dependencies**: Instructions may not have meaningful data dependencies
+4. **Limited Address Range**: Memory addresses are constrained to reasonable ranges
+
+## Troubleshooting
+
+### Percentages Don't Sum to 100
+The script automatically normalizes percentages. If they don't sum to 100, the script will adjust them proportionally.
+
+### Invalid Instruction Encodings
+All generated instructions are valid RISC-V encodings. If you see issues, check:
+- Register addresses are in range (x1-x31)
+- Immediate values are within bit-width limits
+- Memory offsets are word-aligned
+
+### Reproducibility Issues
+Always use `--seed` option for reproducible sequences. Without a seed, each run generates different sequences.
+
+## Requirements
+
+- Python 3.6 or higher
+- Standard library only (no external dependencies)
+
+## License
+
+Part of the RISC-V 5-Stage Pipeline project.

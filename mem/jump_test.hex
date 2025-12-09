@@ -1,0 +1,208 @@
+// RISC-V Jump Instructions Test Program (Machine Code)
+// Tests JAL (Jump and Link) and JALR (Jump and Link Register)
+// Format: One 32-bit instruction per line (8 hex digits)
+//
+// JAL Encoding (J-type):
+// imm[20|10:1|11|19:12] rd opcode
+// opcode = 1101111 (0x6F)
+//
+// JALR Encoding (I-type):
+// imm[11:0] rs1 funct3 rd opcode
+// opcode = 1100111 (0x67)
+// funct3 = 000
+
+// ============================================
+// Section 1: Initialize Test Values
+// ============================================
+00000093  // ADDI x1, x0, 0         (x1 = 0, ra register)
+00000113  // ADDI x2, x0, 0         (x2 = 0, test result)
+00000193  // ADDI x3, x0, 0         (x3 = 0, test result)
+00000213  // ADDI x4, x0, 0         (x4 = 0, test result)
+00000293  // ADDI x5, x0, 0         (x5 = 0, test result)
+
+// Procedure address calculation base
+00000537  // LUI x10, 0x00000       (x10 = 0)
+00000513  // ADDI x10, x10, 0       (x10 = 0)
+
+// ============================================
+// Section 2: Basic JAL Test (Jump and Link)
+// ============================================
+// Test 2.1: JAL forward jump
+00100113  // ADDI x2, x0, 1         (x2 = 1)
+008000EF  // JAL x1, 8              (Jump forward 8 bytes, save PC+4 in x1)
+00200113  // ADDI x2, x0, 2         (x2 = 2, should be skipped)
+00300113  // ADDI x2, x0, 3         (x2 = 3, should be skipped)
+06400113  // ADDI x2, x0, 100       (x2 = 100, jump target)
+
+// Test 2.2: JAL with return address verification
+00A00193  // ADDI x3, x0, 10        (x3 = 10)
+008000EF  // JAL x1, 8              (Jump forward 8 bytes)
+01400193  // ADDI x3, x0, 20        (x3 = 20, should be skipped)
+01E00193  // ADDI x3, x0, 30        (x3 = 30, jump target)
+
+// ============================================
+// Section 3: Basic JALR Test (Jump and Link Register)
+// ============================================
+// Test 3.1: JALR with base register
+00100213  // ADDI x4, x0, 1         (x4 = 1)
+000005B7  // LUI x11, 0x00000       (x11 = 0)
+00000597  // AUIPC x11, 0           (x11 = PC)
+01000593  // ADDI x11, x11, 16      (x11 = PC + 16)
+000580E7  // JALR x1, 0(x11)        (Jump to x11 + 0)
+00200213  // ADDI x4, x0, 2         (x4 = 2, should be skipped)
+0C800213  // ADDI x4, x0, 200       (x4 = 200, jump target)
+
+// Test 3.2: JALR with immediate offset
+00A00293  // ADDI x5, x0, 10        (x5 = 10)
+00000617  // AUIPC x12, 0           (x12 = PC)
+00C60613  // ADDI x12, x12, 12      (x12 = PC + 12)
+000600E7  // JALR x1, 0(x12)        (Jump to x12 + 0)
+01400293  // ADDI x5, x0, 20        (x5 = 20, should be skipped)
+12C00293  // ADDI x5, x0, 300       (x5 = 300, jump target)
+
+// ============================================
+// Section 4: Simple Procedure Call and Return
+// ============================================
+// Test 4.1: Call procedure using JAL
+00000113  // ADDI x2, x0, 0         (x2 = 0)
+008000EF  // JAL x1, 8              (Call procedure_a)
+03200113  // ADDI x2, x0, 50        (x2 = 50, after return)
+0040006F  // JAL x0, 4              (Jump to end_procedure_test)
+
+06400113  // ADDI x2, x0, 100       (procedure_a: x2 = 100)
+00008067  // JALR x0, 0(x1)         (Return: jump to x1)
+
+0C800113  // ADDI x2, x0, 200       (end_procedure_test: x2 = 200)
+
+// ============================================
+// Section 5: Nested Procedure Calls
+// ============================================
+// Test 5.1: Nested calls with JAL
+00000193  // ADDI x3, x0, 0         (x3 = 0)
+008000EF  // JAL x1, 8              (Call nested_func1)
+3E800193  // ADDI x3, x0, 1000      (x3 = 1000, after all returns)
+0040006F  // JAL x0, 4              (Skip to end)
+
+06400193  // ADDI x3, x0, 100       (nested_func1: x3 = 100)
+008000EF  // JAL x1, 8              (Call nested_func2)
+0C800193  // ADDI x3, x0, 200       (x3 = 200, func1 after func2 returns)
+00008067  // JALR x0, 0(x1)         (Return from func1)
+
+12C00193  // ADDI x3, x0, 300       (nested_func2: x3 = 300)
+00008067  // JALR x0, 0(x1)         (Return from func2)
+
+7D000193  // ADDI x3, x0, 2000      (end_nested_test: x3 = 2000)
+
+// ============================================
+// Section 6: Procedure Call with Calculated Address
+// ============================================
+// Test 6.1: Calculate procedure address and call with JALR
+00000213  // ADDI x4, x0, 0         (x4 = 0)
+00000697  // AUIPC x13, 0           (x13 = PC)
+00C68693  // ADDI x13, x13, 12      (x13 = PC + 12)
+000680E7  // JALR x1, 0(x13)        (Call calc_procedure)
+1F400213  // ADDI x4, x0, 500       (x4 = 500, after return)
+0040006F  // JAL x0, 4              (Skip procedure)
+
+25800213  // ADDI x4, x0, 600       (calc_procedure: x4 = 600)
+00008067  // JALR x0, 0(x1)         (Return)
+
+2BC00213  // ADDI x4, x0, 700       (end_calc_test: x4 = 700)
+
+// ============================================
+// Section 7: Multiple Procedure Calls
+// ============================================
+// Test 7.1: Call procedure1
+00000293  // ADDI x5, x0, 0         (x5 = 0)
+008000EF  // JAL x1, 8              (Call proc1)
+00A00293  // ADDI x5, x0, 10        (x5 = 10, after proc1)
+
+// Test 7.2: Call procedure2
+008000EF  // JAL x1, 8              (Call proc2)
+01400293  // ADDI x5, x0, 20        (x5 = 20, after proc2)
+
+// Test 7.3: Call procedure3
+008000EF  // JAL x1, 8              (Call proc3)
+01E00293  // ADDI x5, x0, 30        (x5 = 30, after proc3)
+
+0040006F  // JAL x0, 4              (Skip procedure definitions)
+
+06400293  // ADDI x5, x0, 100       (proc1: x5 = 100)
+00008067  // JALR x0, 0(x1)         (Return)
+
+0C800293  // ADDI x5, x0, 200       (proc2: x5 = 200)
+00008067  // JALR x0, 0(x1)         (Return)
+
+12C00293  // ADDI x5, x0, 300       (proc3: x5 = 300)
+00008067  // JALR x0, 0(x1)         (Return)
+
+3E800293  // ADDI x5, x0, 1000      (end_multi_test: x5 = 1000)
+
+// ============================================
+// Section 8: Return Address Register (x1/ra) Usage
+// ============================================
+// Test 8.1: Save return address in x1
+00000113  // ADDI x2, x0, 0         (x2 = 0)
+008000EF  // JAL x1, 8              (Call ra_test_proc)
+06400113  // ADDI x2, x0, 100       (x2 = 100, after return)
+0040006F  // JAL x0, 4              (Skip procedure)
+
+0C800113  // ADDI x2, x0, 200       (ra_test_proc: x2 = 200)
+00008067  // JALR x0, 0(x1)         (Return using x1)
+
+12C00113  // ADDI x2, x0, 300       (end_ra_test: x2 = 300)
+
+// Test 8.2: Nested calls preserving return addresses
+00000193  // ADDI x3, x0, 0         (x3 = 0)
+008000EF  // JAL x1, 8              (Call outer_proc)
+3E800193  // ADDI x3, x0, 1000      (x3 = 1000, after all returns)
+0040006F  // JAL x0, 4              (Skip procedures)
+
+06400193  // ADDI x3, x0, 100       (outer_proc: x3 = 100)
+000080B3  // ADD x6, x1, x0         (x6 = x1, save outer return address)
+008000EF  // JAL x1, 8              (Call inner_proc)
+00030093  // ADDI x1, x6, 0         (x1 = x6, restore outer return address)
+0C800193  // ADDI x3, x0, 200       (x3 = 200, outer_proc after inner returns)
+00008067  // JALR x0, 0(x1)         (Return from outer_proc)
+
+12C00193  // ADDI x3, x0, 300       (inner_proc: x3 = 300)
+00008067  // JALR x0, 0(x1)         (Return from inner_proc)
+
+7D000193  // ADDI x3, x0, 2000      (end_ra_nested: x3 = 2000)
+
+// ============================================
+// Section 9: Jump to Calculated Addresses
+// ============================================
+// Test 9.1: Calculate jump target address
+00000213  // ADDI x4, x0, 0         (x4 = 0)
+00000717  // AUIPC x14, 0           (x14 = PC)
+00C70713  // ADDI x14, x14, 12      (x14 = PC + 12)
+000700E7  // JALR x1, 0(x14)        (Jump to calculated address)
+00100213  // ADDI x4, x0, 1         (x4 = 1, should be skipped)
+00200213  // ADDI x4, x0, 2         (x4 = 2, calculated target)
+
+// Test 9.2: Jump with offset calculation
+00000293  // ADDI x5, x0, 0         (x5 = 0)
+000007B7  // LUI x15, 0x00000       (x15 = 0)
+00000797  // AUIPC x15, 0           (x15 = PC)
+00878793  // ADDI x15, x15, 8       (x15 = PC + 8)
+000780E7  // JALR x1, 0(x15)        (Jump to x15 + 0)
+00A00293  // ADDI x5, x0, 10        (x5 = 10, should be skipped)
+01400293  // ADDI x5, x0, 20        (x5 = 20, calculated target)
+
+// ============================================
+// Section 10: Store Results for Verification
+// ============================================
+00102023  // SW x1, 0(x0)           (Store return address)
+00202223  // SW x2, 4(x0)           (Store x2)
+00302423  // SW x3, 8(x0)           (Store x3)
+00402623  // SW x4, 12(x0)          (Store x4)
+00502823  // SW x5, 16(x0)          (Store x5)
+
+// ============================================
+// Section 11: End Marker
+// ============================================
+00000013  // ADDI x0, x0, 0         (NOP)
+00000013  // ADDI x0, x0, 0         (NOP)
+00000013  // ADDI x0, x0, 0         (NOP)
+

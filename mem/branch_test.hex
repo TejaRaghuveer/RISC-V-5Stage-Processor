@@ -1,0 +1,249 @@
+// RISC-V Branch Instructions Test Program (Machine Code)
+// Tests all branch types: BEQ, BNE, BLT, BGE, BLTU, BGEU
+// Format: One 32-bit instruction per line (8 hex digits)
+//
+// Branch Instruction Encoding (B-type):
+// imm[12|10:5] rs2 rs1 funct3 imm[4:1|11] opcode
+// opcode = 1100011 (0x63)
+// funct3: 000=BEQ, 001=BNE, 100=BLT, 101=BGE, 110=BLTU, 111=BGEU
+
+// ============================================
+// Section 1: Initialize Test Values
+// ============================================
+00A00093  // ADDI x1, x0, 10        (x1 = 10)
+01400113  // ADDI x2, x0, 20        (x2 = 20)
+00000193  // ADDI x3, x0, 0         (x3 = 0)
+FF600213  // ADDI x4, x0, -10       (x4 = -10, 0xFFFFFFF6)
+FEC00293  // ADDI x5, x0, -20       (x5 = -20, 0xFFFFFFEC)
+
+// Large positive values
+7FFFF317  // LUI x6, 0x7FFFF        (x6 = 0x7FFFF000)
+FFF30313  // ADDI x6, x6, 0xFFF     (x6 = 0x7FFFFFFF)
+
+// Large negative values
+80000397  // LUI x7, 0x80000        (x7 = 0x80000000)
+00000393  // ADDI x7, x7, 0         (x7 = 0x80000000)
+
+// Test result registers
+00000513  // ADDI x10, x0, 0        (x10 = 0, BEQ test result)
+00000593  // ADDI x11, x0, 0        (x11 = 0, BNE test result)
+00000613  // ADDI x12, x0, 0        (x12 = 0, BLT test result)
+00000693  // ADDI x13, x0, 0        (x13 = 0, BGE test result)
+00000713  // ADDI x14, x0, 0        (x14 = 0, BLTU test result)
+00000793  // ADDI x15, x0, 0        (x15 = 0, BGEU test result)
+
+// ============================================
+// Section 2: BEQ (Branch if Equal) Tests
+// ============================================
+// Test 2.1: BEQ taken (forward branch)
+00100513  // ADDI x10, x0, 1        (x10 = 1)
+00108463  // BEQ x1, x1, 8         (if x1 == x1, branch forward 8 bytes = 2 instructions)
+00200513  // ADDI x10, x0, 2       (x10 = 2, should be skipped)
+00300513  // ADDI x10, x0, 3       (x10 = 3, branch target)
+
+// Test 2.2: BEQ not taken (forward branch)
+00A00513  // ADDI x10, x0, 10      (x10 = 10)
+00208663  // BEQ x1, x2, 12        (if x1 == x2, branch forward 12 bytes, false)
+01400513  // ADDI x10, x0, 20      (x10 = 20, should execute)
+01E00513  // ADDI x10, x0, 30      (x10 = 30, should execute)
+
+// Test 2.3: BEQ taken with zero (forward branch)
+06400513  // ADDI x10, x0, 100     (x10 = 100)
+00318663  // BEQ x3, x3, 12        (if x3 == x3, branch forward 12 bytes, true)
+0C800513  // ADDI x10, x0, 200     (x10 = 200, should be skipped)
+12C00513  // ADDI x10, x0, 300     (x10 = 300, branch target)
+
+// Test 2.4: BEQ backward branch (taken) - Note: This creates a loop
+// We'll skip this in hex to avoid infinite loops in simulation
+// In actual code, this would branch backward
+
+// ============================================
+// Section 3: BNE (Branch if Not Equal) Tests
+// ============================================
+// Test 3.1: BNE taken (forward branch)
+00100593  // ADDI x11, x0, 1       (x11 = 1)
+00209463  // BNE x1, x2, 8         (if x1 != x2, branch forward 8 bytes, true)
+00200593  // ADDI x11, x0, 2       (x11 = 2, should be skipped)
+00300593  // ADDI x11, x0, 3       (x11 = 3, branch target)
+
+// Test 3.2: BNE not taken (forward branch)
+00A00593  // ADDI x11, x0, 10      (x11 = 10)
+00108463  // BNE x1, x1, 8         (if x1 != x1, branch forward 8 bytes, false)
+01400593  // ADDI x11, x0, 20      (x11 = 20, should execute)
+01E00593  // ADDI x11, x0, 30      (x11 = 30, should execute)
+
+// Test 3.3: BNE taken with zero (forward branch)
+06400593  // ADDI x11, x0, 100     (x11 = 100)
+00308463  // BNE x1, x3, 8         (if x1 != x3, branch forward 8 bytes, true)
+0C800593  // ADDI x11, x0, 200     (x11 = 200, should be skipped)
+12C00593  // ADDI x11, x0, 300     (x11 = 300, branch target)
+
+// ============================================
+// Section 4: BLT (Branch if Less Than, Signed) Tests
+// ============================================
+// Test 4.1: BLT taken - positive < positive (forward branch)
+00100613  // ADDI x12, x0, 1       (x12 = 1)
+0020C463  // BLT x1, x2, 8         (if x1 < x2, branch forward 8 bytes, true)
+00200613  // ADDI x12, x0, 2       (x12 = 2, should be skipped)
+00300613  // ADDI x12, x0, 3       (x12 = 3, branch target)
+
+// Test 4.2: BLT not taken - positive >= positive (forward branch)
+00A00613  // ADDI x12, x0, 10      (x12 = 10)
+0010C463  // BLT x2, x1, 8         (if x2 < x1, branch forward 8 bytes, false)
+01400613  // ADDI x12, x0, 20      (x12 = 20, should execute)
+01E00613  // ADDI x12, x0, 30      (x12 = 30, should execute)
+
+// Test 4.3: BLT taken - negative < positive (forward branch)
+06400613  // ADDI x12, x0, 100     (x12 = 100)
+00124463  // BLT x4, x1, 8         (if x4 < x1, branch forward 8 bytes, true)
+0C800613  // ADDI x12, x0, 200     (x12 = 200, should be skipped)
+12C00613  // ADDI x12, x0, 300     (x12 = 300, branch target)
+
+// Test 4.4: BLT taken - negative < negative (forward branch)
+3E800613  // ADDI x12, x0, 1000    (x12 = 1000)
+0052C463  // BLT x5, x4, 8         (if x5 < x4, branch forward 8 bytes, true)
+7D000613  // ADDI x12, x0, 2000    (x12 = 2000, should be skipped)
+BB800613  // ADDI x12, x0, 3000    (x12 = 3000, branch target)
+
+// Test 4.5: BLT not taken - positive < negative (forward branch)
+27100613  // ADDI x12, x0, 10000   (x12 = 10000)
+0040C463  // BLT x1, x4, 8         (if x1 < x4, branch forward 8 bytes, false)
+4E200613  // ADDI x12, x0, 20000   (x12 = 20000, should execute)
+75300613  // ADDI x12, x0, 30000   (x12 = 30000, should execute)
+
+// Test 4.6: BLT edge case - zero comparison (forward branch)
+86A00613  // ADDI x12, x0, 100000  (x12 = 100000)
+0011C463  // BLT x3, x1, 8         (if x3 < x1, branch forward 8 bytes, true)
+0D400613  // ADDI x12, x0, 200000  (x12 = 200000, should be skipped)
+12400613  // ADDI x12, x0, 300000  (x12 = 300000, branch target)
+
+// ============================================
+// Section 5: BGE (Branch if Greater or Equal, Signed) Tests
+// ============================================
+// Test 5.1: BGE taken - positive > positive (forward branch)
+00100693  // ADDI x13, x0, 1       (x13 = 1)
+0010D463  // BGE x2, x1, 8         (if x2 >= x1, branch forward 8 bytes, true)
+00200693  // ADDI x13, x0, 2       (x13 = 2, should be skipped)
+00300693  // ADDI x13, x0, 3       (x13 = 3, branch target)
+
+// Test 5.2: BGE taken - equal values (forward branch)
+00A00693  // ADDI x13, x0, 10      (x13 = 10)
+0010D463  // BGE x1, x1, 8         (if x1 >= x1, branch forward 8 bytes, true)
+01400693  // ADDI x13, x0, 20      (x13 = 20, should be skipped)
+01E00693  // ADDI x13, x0, 30      (x13 = 30, branch target)
+
+// Test 5.3: BGE not taken - positive < positive (forward branch)
+06400693  // ADDI x13, x0, 100     (x13 = 100)
+0020D463  // BGE x1, x2, 8         (if x1 >= x2, branch forward 8 bytes, false)
+0C800693  // ADDI x13, x0, 200     (x13 = 200, should execute)
+12C00693  // ADDI x13, x0, 300     (x13 = 300, should execute)
+
+// Test 5.4: BGE taken - negative >= negative (forward branch)
+3E800693  // ADDI x13, x0, 1000    (x13 = 1000)
+0052D463  // BGE x4, x5, 8         (if x4 >= x5, branch forward 8 bytes, true)
+7D000693  // ADDI x13, x0, 2000    (x13 = 2000, should be skipped)
+BB800693  // ADDI x13, x0, 3000    (x13 = 3000, branch target)
+
+// Test 5.5: BGE taken - positive >= negative (forward branch)
+27100693  // ADDI x13, x0, 10000   (x13 = 10000)
+0040D463  // BGE x1, x4, 8         (if x1 >= x4, branch forward 8 bytes, true)
+4E200693  // ADDI x13, x0, 20000   (x13 = 20000, should be skipped)
+75300693  // ADDI x13, x0, 30000   (x13 = 30000, branch target)
+
+// ============================================
+// Section 6: BLTU (Branch if Less Than, Unsigned) Tests
+// ============================================
+// Test 6.1: BLTU taken - positive < positive (forward branch)
+00100713  // ADDI x14, x0, 1       (x14 = 1)
+0020E463  // BLTU x1, x2, 8         (if x1 < x2, branch forward 8 bytes, true)
+00200713  // ADDI x14, x0, 2       (x14 = 2, should be skipped)
+00300713  // ADDI x14, x0, 3       (x14 = 3, branch target)
+
+// Test 6.2: BLTU not taken - positive >= positive (forward branch)
+00A00713  // ADDI x14, x0, 10      (x14 = 10)
+0010E463  // BLTU x2, x1, 8         (if x2 < x1, branch forward 8 bytes, false)
+01400713  // ADDI x14, x0, 20      (x14 = 20, should execute)
+01E00713  // ADDI x14, x0, 30      (x14 = 30, should execute)
+
+// Test 6.3: BLTU edge case - negative as treated large unsigned (forward branch)
+// x4 = -10 = 0xFFFFFFF6 (unsigned: 4294967286), x1 = 10
+// 10 < 4294967286, so branch SHOULD be taken
+06400713  // ADDI x14, x0, 100     (x14 = 100)
+0040E463  // BLTU x1, x4, 8         (if x1 < x4, branch forward 8 bytes, true)
+0C800713  // ADDI x14, x0, 200     (x14 = 200, should be skipped)
+12C00713  // ADDI x14, x0, 300     (x14 = 300, branch target)
+
+// Test 6.4: BLTU taken - negative < negative (as unsigned) (forward branch)
+// x5 = -20 = 0xFFFFFFEC (unsigned: 4294967276), x4 = -10 = 0xFFFFFFF6 (unsigned: 4294967286)
+// 4294967276 < 4294967286, so branch SHOULD be taken
+3E800713  // ADDI x14, x0, 1000    (x14 = 1000)
+0042E463  // BLTU x5, x4, 8         (if x5 < x4, branch forward 8 bytes, true)
+7D000713  // ADDI x14, x0, 2000    (x14 = 2000, should be skipped)
+BB800713  // ADDI x14, x0, 3000    (x14 = 3000, branch target)
+
+// Test 6.5: BLTU edge case - zero comparison (forward branch)
+27100713  // ADDI x14, x0, 10000   (x14 = 10000)
+0011E463  // BLTU x3, x1, 8         (if x3 < x1, branch forward 8 bytes, true)
+4E200713  // ADDI x14, x0, 20000   (x14 = 20000, should be skipped)
+75300713  // ADDI x14, x0, 30000   (x14 = 30000, branch target)
+
+// ============================================
+// Section 7: BGEU (Branch if Greater or Equal, Unsigned) Tests
+// ============================================
+// Test 7.1: BGEU taken - positive > positive (forward branch)
+00100793  // ADDI x15, x0, 1       (x15 = 1)
+0020F463  // BGEU x2, x1, 8         (if x2 >= x1, branch forward 8 bytes, true)
+00200793  // ADDI x15, x0, 2       (x15 = 2, should be skipped)
+00300793  // ADDI x15, x0, 3       (x15 = 3, branch target)
+
+// Test 7.2: BGEU taken - equal values (forward branch)
+00A00793  // ADDI x15, x0, 10      (x15 = 10)
+0010F463  // BGEU x1, x1, 8         (if x1 >= x1, branch forward 8 bytes, true)
+01400793  // ADDI x15, x0, 20      (x15 = 20, should be skipped)
+01E00793  // ADDI x15, x0, 30      (x15 = 30, branch target)
+
+// Test 7.3: BGEU not taken - positive < positive (forward branch)
+06400793  // ADDI x15, x0, 100     (x15 = 100)
+0020F463  // BGEU x1, x2, 8         (if x1 >= x2, branch forward 8 bytes, false)
+0C800793  // ADDI x15, x0, 200     (x15 = 200, should execute)
+12C00793  // ADDI x15, x0, 300     (x15 = 300, should execute)
+
+// Test 7.4: BGEU edge case - negative as treated large unsigned (forward branch)
+// x4 = -10 = 0xFFFFFFF6 (unsigned: 4294967286), x1 = 10
+// 4294967286 >= 10, so branch SHOULD be taken
+3E800793  // ADDI x15, x0, 1000    (x15 = 1000)
+0040F463  // BGEU x4, x1, 8         (if x4 >= x1, branch forward 8 bytes, true)
+7D000793  // ADDI x15, x0, 2000    (x15 = 2000, should be skipped)
+BB800793  // ADDI x15, x0, 3000    (x15 = 3000, branch target)
+
+// Test 7.5: BGEU taken - negative >= negative (as unsigned) (forward branch)
+// x4 = -10 = 0xFFFFFFF6 (unsigned: 4294967286), x5 = -20 = 0xFFFFFFEC (unsigned: 4294967276)
+// 4294967286 >= 4294967276, so branch SHOULD be taken
+27100793  // ADDI x15, x0, 10000   (x15 = 10000)
+0052F463  // BGEU x4, x5, 8         (if x4 >= x5, branch forward 8 bytes, true)
+4E200793  // ADDI x15, x0, 20000   (x15 = 20000, should be skipped)
+75300793  // ADDI x15, x0, 30000   (x15 = 30000, branch target)
+
+// Test 7.6: BGEU edge case - zero comparison (forward branch)
+86A00793  // ADDI x15, x0, 100000  (x15 = 100000)
+0010F463  // BGEU x1, x3, 8         (if x1 >= x3, branch forward 8 bytes, true)
+0D400793  // ADDI x15, x0, 200000  (x15 = 200000, should be skipped)
+12400793  // ADDI x15, x0, 300000  (x15 = 300000, branch target)
+
+// ============================================
+// Section 8: Store Results for Verification
+// ============================================
+00A02023  // SW x10, 0(x0)         (Store BEQ test result)
+00B02223  // SW x11, 4(x0)         (Store BNE test result)
+00C02423  // SW x12, 8(x0)         (Store BLT test result)
+00D02623  // SW x13, 12(x0)        (Store BGE test result)
+00E02823  // SW x14, 16(x0)        (Store BLTU test result)
+00F02A23  // SW x15, 20(x0)        (Store BGEU test result)
+
+// ============================================
+// Section 9: End Marker
+// ============================================
+00000013  // ADDI x0, x0, 0        (NOP)
+00000013  // ADDI x0, x0, 0        (NOP)
+00000013  // ADDI x0, x0, 0        (NOP)
+

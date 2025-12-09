@@ -1,0 +1,54 @@
+# RISC-V Random Instruction Generator Configuration File
+# Instruction mix percentages (must sum to 100)
+# Format: instruction_type: percentage
+
+# R-type instructions (ADD, SUB, AND, OR, XOR)
+R_TYPE: 20
+
+# I-type instructions (ADDI, ANDI, ORI, XORI)
+I_TYPE: 25
+
+# Load instructions (LW)
+LOAD: 10
+
+# Store instructions (SW)
+STORE: 10
+
+# Branch instructions (BEQ, BNE, BLT, BGE, BLTU, BGEU)
+BRANCH: 20
+
+# Jump and Link (JAL)
+JAL: 5
+
+# Jump and Link Register (JALR)
+JALR: 10
+
+# Example configurations:
+# 
+# Arithmetic-heavy test:
+# R_TYPE: 40
+# I_TYPE: 30
+# LOAD: 5
+# STORE: 5
+# BRANCH: 15
+# JAL: 2
+# JALR: 3
+#
+# Control-flow heavy test:
+# R_TYPE: 10
+# I_TYPE: 15
+# LOAD: 5
+# STORE: 5
+# BRANCH: 40
+# JAL: 15
+# JALR: 10
+#
+# Memory-intensive test:
+# R_TYPE: 15
+# I_TYPE: 15
+# LOAD: 30
+# STORE: 30
+# BRANCH: 5
+# JAL: 2
+# JALR: 3
+
