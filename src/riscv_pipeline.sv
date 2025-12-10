@@ -568,25 +568,16 @@ module riscv_pipeline #(
      */
     always_comb begin
         // Use registered signals from EX/MEM register for proper timing
-        // This ensures PC update uses synchronized signals, avoiding timing violations
-        // mem_PCSrc is registered in EX/MEM register and indicates branch/jump taken
         if (mem_PCSrc) begin
-            // Branch/Jump taken: Select target address based on instruction type
-            // mem_Jump and mem_Branch are registered signals from EX/MEM register
+            // Branch/Jump taken: Select target address
             if (mem_Jump) begin
-                // Jump instruction (JAL/JALR): Use jump target (always taken)
+                // Jump instruction: Use jump target (always taken)
                 branch_target = mem_jump_target;
-                branch_taken = 1'b1;
-            end else if (mem_Branch && mem_branch_taken) begin
-                // Branch instruction: Use branch target (condition met)
-                branch_target = mem_branch_target;
-                branch_taken = 1'b1;
             end else begin
-                // Should not occur: mem_PCSrc=1 but neither jump nor branch taken
-                // This is a safety case - should not happen in normal operation
-                branch_target = {ADDR_WIDTH{1'b0}};  // Don't care
-                branch_taken = 1'b0;
+                // Branch instruction: Use branch target (if taken)
+                branch_target = mem_branch_target;
             end
+            branch_taken = 1'b1;
         end else begin
             // No branch/jump or not taken: Sequential execution (IF stage handles PC+4)
             branch_target = {ADDR_WIDTH{1'b0}};  // Don't care
