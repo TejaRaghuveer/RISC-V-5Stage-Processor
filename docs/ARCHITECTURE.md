@@ -60,6 +60,10 @@ The RISC-V RV32I processor implements a classic 5-stage pipeline architecture th
   IF/ID         ID/EX         EX/MEM        MEM/WB         RF
 ```
 
+> **📊 For a detailed block diagram** showing all components, forwarding paths, hazard detection, and control connections, see [`PIPELINE_BLOCK_DIAGRAM.md`](PIPELINE_BLOCK_DIAGRAM.md).  
+> **📐 For a compact version** suitable for embedding in documentation, see [`PIPELINE_DIAGRAM_COMPACT.md`](PIPELINE_DIAGRAM_COMPACT.md).  
+> **⏱️ For pipeline timing diagrams** showing cycle-by-cycle instruction progression with hazards, forwarding, stalls, and flushes, see [`PIPELINE_TIMING_DIAGRAMS.md`](PIPELINE_TIMING_DIAGRAMS.md).
+
 ### Key Features
 
 - **5-Stage Pipeline**: IF → ID → EX → MEM → WB
