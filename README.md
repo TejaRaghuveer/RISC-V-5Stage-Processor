@@ -34,6 +34,7 @@ A complete, production-ready implementation of a 5-stage pipelined RISC-V RV32I 
 - **Simulator**: Icarus Verilog, ModelSim/QuestaSim, or Xilinx Vivado
 - **Waveform Viewer**: GTKWave (optional but recommended)
 - **Python 3**: For test generation scripts (optional)
+- **FPGA Tools** (for synthesis): Xilinx Vivado or Intel Quartus Prime (optional)
 
 ### Get Started in 3 Steps
 
@@ -58,7 +59,9 @@ gtkwave riscv_pipeline.vcd
 # See docs/SIMULATION.md for detailed instructions
 ```
 
-📖 **For detailed instructions**, see [`docs/BUILD.md`](docs/BUILD.md) and [`docs/SIMULATION.md`](docs/SIMULATION.md)
+📖 **For detailed instructions**, see [`docs/BUILD.md`](docs/BUILD.md) and [`docs/SIMULATION.md`](docs/SIMULATION.md)  
+🔧 **For FPGA synthesis**, see [`docs/SYNTHESIS.md`](docs/SYNTHESIS.md)  
+🎮 **For FPGA demonstration**, see [`docs/FPGA_DEMO.md`](docs/FPGA_DEMO.md) (includes Basys3 & DE10-Lite support)
 
 ---
 
@@ -103,6 +106,7 @@ gtkwave riscv_pipeline.vcd
 - **Modular Design**: Clean separation of concerns, easy to extend
 - **Performance Monitoring**: Built-in CPI tracking and performance metrics
 - **Synthesizable**: Ready for FPGA/ASIC implementation
+- **FPGA Demo Ready**: Includes top-level wrapper with LED display, clock divider, and board support (Basys3, DE10-Lite)
 
 ---
 
@@ -727,6 +731,10 @@ Comprehensive documentation is available in the `docs/` directory:
 | [`TEST_REPORT.md`](docs/TEST_REPORT.md) | Comprehensive test results and coverage |
 | [`BUILD.md`](docs/BUILD.md) | Build instructions and prerequisites |
 | [`SIMULATION.md`](docs/SIMULATION.md) | Simulation guide and waveform analysis |
+| [`SYNTHESIS.md`](docs/SYNTHESIS.md) | **FPGA synthesis guide (Vivado & Quartus)** |
+| [`FPGA_DEMO.md`](docs/FPGA_DEMO.md) | **FPGA demonstration guide with LED display and board support** |
+| [`TIMING_ANALYSIS.md`](docs/TIMING_ANALYSIS.md) | Timing report interpretation and critical path analysis |
+| [`OPTIMIZATION_GUIDE.md`](docs/OPTIMIZATION_GUIDE.md) | Optimization strategies for timing, resources, and power |
 | [`PERFORMANCE_MONITOR.md`](docs/PERFORMANCE_MONITOR.md) | Performance monitoring documentation |
 
 ## 📖 References
