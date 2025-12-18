@@ -61,7 +61,7 @@ module ex_mem_reg #(
     input  logic [ADDR_WIDTH-1:0]       ex_branch_target, // Branch target address
     input  logic [ADDR_WIDTH-1:0]       ex_jump_target,   // Jump target address
     input  logic                        ex_PCSrc,         // PC source select from branch/jump control
-    input  logic                        ex_branch_flush   // Branch/jump flush signal
+    input  logic                        ex_branch_flush,  // Branch/jump flush signal
     
     // ============================================
     // Outputs to MEM Stage

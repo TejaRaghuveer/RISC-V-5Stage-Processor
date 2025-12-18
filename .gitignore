@@ -1,73 +1,129 @@
-# Verilog/SystemVerilog Project .gitignore
+# ==============================================================================
+# SystemVerilog/Verilog RISC-V Processor Project .gitignore
+# ==============================================================================
+# This file specifies intentionally untracked files that Git should ignore.
+# Patterns are matched relative to the repository root.
+#
+# Note: Source files (*.sv, *.v), testbenches, scripts, documentation,
+# and test programs are NOT ignored and will be tracked by Git.
+# ==============================================================================
 
-# Simulation artifacts
+# ==============================================================================
+# SIMULATION OUTPUT FILES
+# ==============================================================================
+# These files are generated during simulation and can be regenerated.
+# They are typically large binary files and should not be committed.
+
+# Value Change Dump (VCD) - Standard waveform format
 *.vcd
-*.fsdb
-*.vpd
-*.lxt
-*.fst
-*.ghw
 *.vcd.gz
+
+# Verilog Standard Delay Format (VSDF) - Timing annotation files
+*.vsdf
+*.vstf
+
+# Waveform Log Format (WLF) - ModelSim/QuestaSim waveform format
+*.wlf
+vsim.wlf
+
+# Fast Signal Database (FSDB) - Verdi waveform format
+*.fsdb
+*.fsdb.gz
+
+# VPD (VCD Plus) - Synopsys VCS waveform format
+*.vpd
 *.vpd.gz
 
-# Log files
-*.log
-*.jou
-*.str
-*.pb
+# LXT/FST - GTKWave waveform formats
+*.lxt
+*.lxt2
+*.fst
 
-# Compiled objects
-*.o
-*.so
-*.a
+# GHW - GHDL waveform format
+*.ghw
 
-# Executables
-*.exe
-*.out
-*.x
-a.out
+# SHM - Cadence waveform database
+*.shm/
 
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-*.bak
-*.tmp
+# ==============================================================================
+# COMPILATION ARTIFACTS AND BUILD DIRECTORIES
+# ==============================================================================
+# These directories and files are created during compilation/synthesis.
+# They contain generated code and can be regenerated from source files.
 
-# Simulation tool specific
-# ModelSim/QuestaSim
+# ModelSim/QuestaSim compilation directory
 work/
 modelsim.ini
-transcript
-vsim.wlf
-*.wlf
 
-# Xilinx Vivado
-*.xpr
-*.xpr.user
-*.jou
+# ModelSim/QuestaSim transcript/log files
+transcript
+vsim.log
+
+# Icarus Verilog compiled output
+*.vvp
+
+# Verilator build directory
+obj_dir/
+
+# Synopsys VCS compilation artifacts
+simv
+simv.daidir/
+simv.vdb/
+*.csrc/
+*.daidir/
+uvm_hdl/
+
+# Cadence Incisive/Xcelium compilation artifacts
+xcelium.d/
+INCA_libs/
+.simvision/
+
+# GHDL compilation artifacts
+*.cf
+
+# ==============================================================================
+# LOG FILES AND TRANSCRIPTS
+# ==============================================================================
+# Log files from various tools - can be regenerated and are often large
+
+# General log files
 *.log
+
+# Xilinx Vivado log files
+*.jou
 *.str
 *.rpt
-*.xml
-*.html
-*.pb
-*.zip
-*.tar.gz
+
+# Synopsys VCS log files
+vcs.log
+
+# Cadence Xcelium log files
+xrun.log
+xrun.history
+
+# Quartus log files
+*.qarlog
+*.qarlog.*
+
+# ==============================================================================
+# SYNTHESIS AND IMPLEMENTATION ARTIFACTS
+# ==============================================================================
+# Files generated during FPGA/ASIC synthesis and implementation
+
+# Xilinx Vivado project files and build artifacts
+*.xpr
+*.xpr.user
 *.cache/
 *.hw
 *.hwdef
+*.hwh
+*.sysdef
 *.bit
 *.mcs
 *.prm
 *.bin
 *.ltx
 *.hdf
-*.sysdef
-*.hwh
 *.tcl.user
 *.tcl.user.*
 vivado/
@@ -77,139 +133,32 @@ vivado_pid*
 *.srcs/
 *.data/
 *.runs/
-*.cache/
 .hw/
 .sdk/
 *.sdk/
-*.hwdef
-*.sysdef
-*.hwh
-*.ltx
-*.mcs
-*.prm
-*.bin
-*.bit
-*.hdf
-*.zip
-*.tar.gz
-*.pb
-*.xml
-*.html
-*.rpt
-*.str
-*.jou
-*.log
-*.xpr.user
-*.xpr
 
-# Intel Quartus
+# Intel Quartus project files and build artifacts
 *.qpf
 *.qsf
 *.qws
-*.qarlog
-*.qarlog.*
-*.rpt
-*.summary
-*.done
-*.jdi
-*.pin
-*.sopcinfo
 *.sof
 *.pof
 *.rbf
 *.rpd
-*.sopc
-*.qsys
 *.sopcinfo
 *.jdi
 *.pin
 *.summary
 *.done
-*.qarlog
-*.qarlog.*
-*.rpt
-*.qws
-*.qsf
-*.qpf
 db/
 output_files/
 incremental_db/
-*.rbf
-*.rpd
-*.sopc
-*.qsys
-*.sopcinfo
-*.jdi
-*.pin
-*.summary
-*.done
-*.qarlog
-*.qarlog.*
-*.rpt
-*.qws
-*.qsf
-*.qpf
 
-# Synopsys VCS
-*.vpd
-*.vcd
-*.log
-*.key
-*.h
-*.daidir/
-*.csrc/
-simv
-simv.daidir/
-simv.vdb/
-uvm_hdl/
-vcs.key
-vcs.log
-*.vpd.gz
-*.vcd.gz
+# ==============================================================================
+# COVERAGE FILES
+# ==============================================================================
+# Code coverage data files - can be regenerated and are often large
 
-# Cadence Incisive/Xcelium
-*.log
-*.key
-*.h
-*.vpd
-*.vcd
-*.shm/
-*.dsn
-*.trn
-*.vcd.gz
-*.vpd.gz
-xcelium.d/
-xrun.log
-xrun.history
-xrun.key
-INCA_libs/
-.simvision/
-
-# Verilator
-obj_dir/
-*.d
-*.a
-*.o
-*.so
-*.exe
-*.out
-
-# Icarus Verilog
-*.vvp
-*.vcd
-*.lxt
-*.fst
-
-# GHDL
-*.cf
-*.o
-*.exe
-*.ghw
-*.vcd
-*.fst
-*.lxt
-
-# Coverage files
 *.ucm
 *.ucdb
 *.vdb
@@ -217,23 +166,157 @@ coverage/
 *.cov
 *.covdb
 
-# Lint tool outputs
-*.lint
-*.log
+# ==============================================================================
+# EXECUTABLES AND COMPILED OBJECTS
+# ==============================================================================
+# Compiled binaries and object files - can be regenerated
 
-# Backup files
+*.o
+*.so
+*.a
+*.exe
+*.out
+*.x
+a.out
+
+# ==============================================================================
+# TEMPORARY AND BACKUP FILES
+# ==============================================================================
+# Temporary files created by editors and tools
+
+# Editor backup files
 *~
 *.bak
 *.backup
 *.old
+*.tmp
+*.swp
+*.swo
 
-# OS specific
-Thumbs.db
+# System temporary files
+*.tmp
+*.temp
+
+# ==============================================================================
+# OS-SPECIFIC FILES
+# ==============================================================================
+# Operating system generated files that should not be tracked
+
+# macOS
 .DS_Store
-desktop.ini
+.AppleDouble
+.LSOverride
+._*
 
-# Project specific (add your own)
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+
+# ==============================================================================
+# IDE AND EDITOR FILES
+# ==============================================================================
+# IDE-specific configuration files (optional - uncomment if desired)
+# Note: Some teams prefer to track IDE settings, so these are commented out
+
+# Visual Studio Code
+# .vscode/
+# *.code-workspace
+
+# JetBrains IDEs (IntelliJ, PyCharm, etc.)
+# .idea/
+# *.iml
+# *.iws
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ==============================================================================
+# TOOL-SPECIFIC FILES
+# ==============================================================================
+# Files specific to various EDA tools
+
+# Synopsys VCS
+*.key
+vcs.key
+
+# Cadence tools
+*.key
+xrun.key
+*.dsn
+*.trn
+
+# Lint tool outputs
+*.lint
+
+# ==============================================================================
+# PROJECT-SPECIFIC EXCLUSIONS
+# ==============================================================================
+# Add project-specific patterns here if needed
+# Examples (currently commented out - uncomment if needed):
+
+# Memory initialization files (if generated, not source)
 # *.mem
 # *.hex
 # *.coe
 
+# Test output directories
+# test_outputs/
+# results/
+
+# ==============================================================================
+# EXPLICIT INCLUSIONS (if needed)
+# ==============================================================================
+# Use ! to force include files that would otherwise be ignored
+# Example: !important_file.log
+
+# Force include source files (should already be tracked, but explicit is good)
+!*.sv
+!*.v
+!*.svh
+!*.vh
+
+# Force include testbenches
+!tb/*.sv
+!tb/*.v
+
+# Force include scripts
+!scripts/*.sh
+!scripts/*.py
+!scripts/*.tcl
+!scripts/*.pl
+
+# Force include documentation
+!docs/**/*.md
+!docs/**/*.txt
+!docs/**/*.pdf
+
+# Force include test programs
+!mem/*.hex
+!mem/*.s
+!mem/*.asm
+
+# Force include configuration files
+!*.mk
+!Makefile
+!makefile
+
+# ==============================================================================
+# END OF .gitignore
+# ==============================================================================
