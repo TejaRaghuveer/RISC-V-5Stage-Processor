@@ -90,6 +90,10 @@ module riscv_pipeline #(
     logic [1:0]                        id_ALUOp;         // ALU operation type
     logic                              id_Branch;         // Branch instruction
     logic                              id_Jump;           // Jump instruction
+    logic                              id_CSRRead;        // CSR read instruction
+    logic                              id_CSRWrite;       // CSR write instruction
+    logic [11:0]                       id_csr_addr;       // CSR address
+    logic [DATA_WIDTH-1:0]            id_csr_read_data;  // CSR read data (tied to 0 for now)
     
     /**
      * ID/EX Pipeline Register Signals
@@ -113,6 +117,10 @@ module riscv_pipeline #(
     logic [1:0]                        ex_ALUOp;         // ALU operation type
     logic                              ex_Branch;        // Branch instruction
     logic                              ex_Jump;          // Jump instruction
+    logic                              ex_CSRRead;       // CSR read instruction
+    logic                              ex_CSRWrite;      // CSR write instruction
+    logic [11:0]                       ex_csr_addr;      // CSR address
+    logic [DATA_WIDTH-1:0]            ex_csr_read_data; // CSR read data
     
     /**
      * EX Stage Signals
@@ -194,6 +202,12 @@ module riscv_pipeline #(
     logic                              hazard_id_ex_flush;      // ID/EX flush signal from hazard detection unit
     logic                              pipeline_stall_internal;  // Combined stall signal (hazard + external)
     logic                              pipeline_flush_internal;  // Combined flush signal (branch/jump + external + hazard)
+    
+    /**
+     * CSR Signals (temporary - CSR integration incomplete)
+     * CSR read data tied to 0 until CSR file is fully integrated
+     */
+    assign id_csr_read_data = {DATA_WIDTH{1'b0}};  // Temporary: CSR not fully integrated
     
     // ============================================
     // Instruction Memory (IMEM) Instantiation
@@ -310,6 +324,10 @@ module riscv_pipeline #(
         .ALUOp(id_ALUOp),                    // ALU operation type
         .Branch(id_Branch),                  // Branch instruction
         .Jump(id_Jump),                      // Jump instruction
+        .CSRRead(id_CSRRead),                // CSR read instruction
+        .CSRWrite(id_CSRWrite),              // CSR write instruction
+        .csr_addr(id_csr_addr),              // CSR address
+        .csr_read_data(id_csr_read_data),    // CSR read data (tied to 0 for now)
         .rs1_addr(id_rs1_addr),               // Source register 1 address
         .rs2_addr(id_rs2_addr),              // Source register 2 address
         .rd_addr(id_rd_addr),                // Destination register address
@@ -352,6 +370,10 @@ module riscv_pipeline #(
         .id_ALUOp(id_ALUOp),                 // ALU operation type
         .id_Branch(id_Branch),               // Branch instruction
         .id_Jump(id_Jump),                   // Jump instruction
+        .id_CSRRead(id_CSRRead),             // CSR read instruction
+        .id_CSRWrite(id_CSRWrite),           // CSR write instruction
+        .id_csr_addr(id_csr_addr),           // CSR address
+        .id_csr_read_data(id_csr_read_data), // CSR read data
         .id_funct3(id_funct3),               // Function field [14:12]
         .id_funct7(id_funct7),               // Function field [31:25]
         .id_opcode(id_opcode),               // Instruction opcode [6:0]
@@ -371,6 +393,10 @@ module riscv_pipeline #(
         .ex_ALUOp(ex_ALUOp),                 // ALU operation type to EX
         .ex_Branch(ex_Branch),               // Branch instruction to EX
         .ex_Jump(ex_Jump),                   // Jump instruction to EX
+        .ex_CSRRead(ex_CSRRead),             // CSR read instruction to EX
+        .ex_CSRWrite(ex_CSRWrite),           // CSR write instruction to EX
+        .ex_csr_addr(ex_csr_addr),           // CSR address to EX
+        .ex_csr_read_data(ex_csr_read_data), // CSR read data to EX
         .ex_funct3(ex_funct3),               // Function field to EX
         .ex_funct7(ex_funct7),               // Function field to EX
         .ex_opcode(ex_opcode)                // Instruction opcode to EX

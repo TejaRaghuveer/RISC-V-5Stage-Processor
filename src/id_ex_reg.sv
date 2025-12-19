@@ -76,7 +76,7 @@ module id_ex_reg #(
     input  logic [11:0]                 id_csr_addr,      // CSR address
     input  logic [DATA_WIDTH-1:0]      id_csr_read_data, // CSR read data
     input  logic                        id_CSRRead,       // CSR read instruction
-    input  logic                        id_CSRWrite      // CSR write instruction
+    input  logic                        id_CSRWrite,      // CSR write instruction
     
     // ============================================
     // Outputs to EX Stage
@@ -107,6 +107,12 @@ module id_ex_reg #(
     output logic [1:0]                  ex_ALUOp,         // ALU operation type
     output logic                        ex_Branch,        // Branch instruction
     output logic                        ex_Jump,          // Jump instruction
+    
+    // CSR Signals
+    output logic [11:0]                 ex_csr_addr,      // CSR address
+    output logic [DATA_WIDTH-1:0]      ex_csr_read_data, // CSR read data
+    output logic                        ex_CSRRead,       // CSR read instruction
+    output logic                        ex_CSRWrite,      // CSR write instruction
     
     // Instruction Fields
     output logic [2:0]                  ex_funct3,        // Function field [14:12]

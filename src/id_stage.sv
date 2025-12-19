@@ -73,7 +73,7 @@ module id_stage #(
     
     // CSR Interface
     output logic [11:0]                 csr_addr,         // CSR address (12 bits)
-    input  logic [DATA_WIDTH-1:0]      csr_read_data     // CSR read data
+    input  logic [DATA_WIDTH-1:0]      csr_read_data,    // CSR read data
     
     // Register Addresses (for forwarding and hazard detection)
     output logic [4:0]                  rs1_addr,         // Source register 1 address
