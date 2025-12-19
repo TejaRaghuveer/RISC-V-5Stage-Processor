@@ -72,6 +72,12 @@ module id_ex_reg #(
     input  logic [6:0]                  id_funct7,        // Function field [31:25]
     input  logic [6:0]                  id_opcode,        // Instruction opcode [6:0]
     
+    // CSR Signals
+    input  logic [11:0]                 id_csr_addr,      // CSR address
+    input  logic [DATA_WIDTH-1:0]      id_csr_read_data, // CSR read data
+    input  logic                        id_CSRRead,       // CSR read instruction
+    input  logic                        id_CSRWrite      // CSR write instruction
+    
     // ============================================
     // Outputs to EX Stage
     // ============================================
@@ -146,6 +152,12 @@ module id_ex_reg #(
     logic [6:0] funct7_reg;
     logic [6:0] opcode_reg;
     
+    // CSR Registers
+    logic [11:0] csr_addr_reg;
+    logic [DATA_WIDTH-1:0] csr_read_data_reg;
+    logic CSRRead_reg;
+    logic CSRWrite_reg;
+    
     /**
      * Pipeline Register Update Logic
      * 
@@ -182,6 +194,10 @@ module id_ex_reg #(
             funct3_reg <= 3'b000;
             funct7_reg <= 7'b0000000;
             opcode_reg <= 7'b0000000;
+            csr_addr_reg <= 12'b000000000000;
+            csr_read_data_reg <= {DATA_WIDTH{1'b0}};
+            CSRRead_reg <= 1'b0;
+            CSRWrite_reg <= 1'b0;
         end else if (flush) begin
             // Flush: Clear register (insert NOP/bubble)
             // Set control signals to safe defaults (no operation)
@@ -203,6 +219,10 @@ module id_ex_reg #(
             Jump_reg <= 1'b0;             // No jump
             funct3_reg <= 3'b000;         // Don't care
             funct7_reg <= 7'b0000000;     // Don't care
+            csr_addr_reg <= 12'b000000000000;
+            csr_read_data_reg <= {DATA_WIDTH{1'b0}};
+            CSRRead_reg <= 1'b0;
+            CSRWrite_reg <= 1'b0;
         end else if (enable) begin
             // Normal operation: Update register with new ID stage data
             rs1_data_reg <= id_rs1_data;
@@ -224,6 +244,10 @@ module id_ex_reg #(
             funct3_reg <= id_funct3;
             funct7_reg <= id_funct7;
             opcode_reg <= id_opcode;
+            csr_addr_reg <= id_csr_addr;
+            csr_read_data_reg <= id_csr_read_data;
+            CSRRead_reg <= id_CSRRead;
+            CSRWrite_reg <= id_CSRWrite;
         end
         // If enable = 0 (stall), register holds current values (no change)
     end
@@ -253,6 +277,10 @@ module id_ex_reg #(
     assign ex_funct3 = funct3_reg;
     assign ex_funct7 = funct7_reg;
     assign ex_opcode = opcode_reg;
+    assign ex_csr_addr = csr_addr_reg;
+    assign ex_csr_read_data = csr_read_data_reg;
+    assign ex_CSRRead = CSRRead_reg;
+    assign ex_CSRWrite = CSRWrite_reg;
     
     /**
      * Pipeline Register Contents Summary:

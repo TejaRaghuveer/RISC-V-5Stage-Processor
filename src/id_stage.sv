@@ -68,6 +68,12 @@ module id_stage #(
     output logic [1:0]                  ALUOp,            // ALU operation type
     output logic                        Branch,            // Branch instruction
     output logic                        Jump,              // Jump instruction
+    output logic                        CSRRead,          // CSR read instruction
+    output logic                        CSRWrite,         // CSR write instruction
+    
+    // CSR Interface
+    output logic [11:0]                 csr_addr,         // CSR address (12 bits)
+    input  logic [DATA_WIDTH-1:0]      csr_read_data     // CSR read data
     
     // Register Addresses (for forwarding and hazard detection)
     output logic [4:0]                  rs1_addr,         // Source register 1 address
@@ -102,6 +108,14 @@ module id_stage #(
     assign rd_addr = instruction[11:7];   // Destination register address
     
     /**
+     * CSR Address Extraction
+     * 
+     * CSR address is in instruction [31:20] (12 bits).
+     * Used for CSR read/write operations.
+     */
+    assign csr_addr = instruction[31:20];
+    
+    /**
      * Register File Instantiation
      * 
      * Two read ports (rs1, rs2) and one write port (rd).
@@ -126,19 +140,49 @@ module id_stage #(
      * Decodes instruction opcode and function fields to generate
      * control signals for the datapath.
      */
+    // Internal control signals
+    logic reg_write_internal;
+    logic csr_read_internal;
+    logic csr_write_internal;
+    
     control_unit control_unit_inst (
         .opcode(opcode),
         .funct3(funct3),
         .funct7(funct7),
-        .RegWrite(RegWrite),
+        .RegWrite(reg_write_internal),
         .MemRead(MemRead),
         .MemWrite(MemWrite),
         .MemToReg(MemToReg),
         .ALUSrc(ALUSrc),
         .ALUOp(ALUOp),
         .Branch(Branch),
-        .Jump(Jump)
+        .Jump(Jump),
+        .CSRRead(csr_read_internal),
+        .CSRWrite(csr_write_internal)
     );
+    
+    /**
+     * ECALL/EBREAK Detection
+     * 
+     * ECALL: opcode=1110011, funct3=000, rs1=0, rd=0
+     * EBREAK: opcode=1110011, funct3=000, rs1=0, rd=1
+     * 
+     * These are not CSR instructions, so disable CSR signals.
+     */
+    logic is_ecall_ebreak;
+    assign is_ecall_ebreak = (opcode == 7'b1110011) && 
+                             (funct3 == 3'b000) && 
+                             (rs1_addr == 5'b00000) && 
+                             ((rd_addr == 5'b00000) || (rd_addr == 5'b00001));
+    
+    // CSR control signals (disabled for ECALL/EBREAK)
+    assign CSRRead = csr_read_internal && !is_ecall_ebreak;
+    assign CSRWrite = csr_write_internal && !is_ecall_ebreak;
+    
+    // RegWrite: Disable for ECALL/EBREAK, disable for CSR if rd=0
+    assign RegWrite = reg_write_internal && 
+                     !is_ecall_ebreak && 
+                     !(CSRRead && (rd_addr == 5'b00000));
     
     /**
      * Immediate Generator Instantiation

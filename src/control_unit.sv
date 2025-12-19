@@ -48,7 +48,9 @@ module control_unit (
     output logic        ALUSrc,        // ALU source (1 = immediate, 0 = register)
     output logic [1:0]  ALUOp,         // ALU operation type
     output logic        Branch,         // Branch instruction
-    output logic        Jump           // Jump instruction (JAL, JALR)
+    output logic        Jump,           // Jump instruction (JAL, JALR)
+    output logic        CSRRead,        // CSR read instruction
+    output logic        CSRWrite        // CSR write instruction
 );
 
     /**
@@ -86,6 +88,8 @@ module control_unit (
         ALUOp = 2'b00;
         Branch = 1'b0;
         Jump = 1'b0;
+        CSRRead = 1'b0;
+        CSRWrite = 1'b0;
         
         case (opcode)
             // ============================================
@@ -233,22 +237,35 @@ module control_unit (
             end
             
             // ============================================
-            // System Instructions (ECALL, EBREAK)
+            // System Instructions (CSR, ECALL, EBREAK)
             // Opcode: 7'b1110011
-            // Format: ECALL, EBREAK
-            // Note: These are handled separately, but included for completeness
+            // Format: CSRRW, CSRRS, CSRRC, ECALL, EBREAK
             // ============================================
             7'b1110011: begin
-                // System instructions are typically handled by exception handler
-                // Control signals depend on specific implementation
-                RegWrite = 1'b0;      // Typically no register write
-                MemRead = 1'b0;       // No memory read
+                // CSR instructions: CSRRW, CSRRS, CSRRC
+                // funct3 encoding:
+                //   000: CSRRW (Atomic Read/Write CSR)
+                //   001: CSRRS (Atomic Read and Set Bits in CSR)
+                //   010: CSRRC (Atomic Read and Clear Bits in CSR)
+                //   011: CSRRWI (CSRRW with immediate)
+                //   101: CSRRSI (CSRRS with immediate)
+                //   110: CSRRCI (CSRRC with immediate)
+                //   000: ECALL (when rs1=0, rd=0)
+                //   001: EBREAK (when rs1=0, rd=0)
+                
+                // CSR instructions: CSRRW, CSRRS, CSRRC
+                // For ECALL/EBREAK detection, we need rs1 and rd addresses
+                // These will be checked in ID stage, here we assume CSR instruction
+                RegWrite = 1'b1;      // Write CSR value to rd (except if rd=0, handled in ID)
+                MemRead = 1'b0;        // No memory read
                 MemWrite = 1'b0;      // No memory write
-                MemToReg = 1'b0;      // Don't care
-                ALUSrc = 1'b0;        // Don't care
-                ALUOp = 2'b00;        // Don't care
+                MemToReg = 1'b0;       // Write CSR read data (not ALU result)
+                ALUSrc = 1'b0;        // Don't care (CSR operation)
+                ALUOp = 2'b00;        // Don't care (CSR operation)
                 Branch = 1'b0;        // Not a branch
-                Jump = 1'b0;          // Not a jump (handled by exception)
+                Jump = 1'b0;          // Not a jump
+                CSRRead = 1'b1;       // Read CSR
+                CSRWrite = 1'b1;      // Write CSR (if rs1 != 0, handled in EX)
             end
             
             // ============================================
@@ -264,6 +281,8 @@ module control_unit (
                 ALUOp = 2'b00;
                 Branch = 1'b0;
                 Jump = 1'b0;
+                CSRRead = 1'b0;
+                CSRWrite = 1'b0;
             end
         endcase
     end

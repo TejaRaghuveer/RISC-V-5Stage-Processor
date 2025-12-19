@@ -735,6 +735,11 @@ Comprehensive documentation is available in the `docs/` directory:
 | [`SYNTHESIS.md`](docs/SYNTHESIS.md) | **FPGA synthesis guide (Vivado & Quartus)** |
 | [`FPGA_DEMO.md`](docs/FPGA_DEMO.md) | **FPGA demonstration guide with LED display and board support** |
 | [`RISCV_COMPLIANCE_TESTS.md`](docs/RISCV_COMPLIANCE_TESTS.md) | **RISC-V compliance test integration guide** |
+| [`BRANCH_PREDICTOR.md`](docs/BRANCH_PREDICTOR.md) | **1-bit branch predictor design and performance analysis** |
+| [`BRANCH_PREDICTOR_INTEGRATION.md`](docs/BRANCH_PREDICTOR_INTEGRATION.md) | **Branch predictor integration guide** |
+| [`CSR_INTEGRATION.md`](docs/CSR_INTEGRATION.md) | **CSR (Control and Status Register) integration guide** |
+| [`CSR_IMPLEMENTATION.md`](docs/CSR_IMPLEMENTATION.md) | **CSR implementation summary and integration steps** |
+| [`PRESENTATION_OUTLINE.md`](docs/PRESENTATION_OUTLINE.md) | **Technical presentation outline for interviews/academic presentations** |
 | [`TIMING_ANALYSIS.md`](docs/TIMING_ANALYSIS.md) | Timing report interpretation and critical path analysis |
 | [`OPTIMIZATION_GUIDE.md`](docs/OPTIMIZATION_GUIDE.md) | Optimization strategies for timing, resources, and power |
 | [`PERFORMANCE_MONITOR.md`](docs/PERFORMANCE_MONITOR.md) | Performance monitoring documentation |
