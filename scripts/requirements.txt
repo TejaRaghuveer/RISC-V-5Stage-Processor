@@ -1,0 +1,9 @@
+# Python requirements for RISC-V compliance test scripts
+# 
+# Optional: pyelftools provides better ELF parsing
+# Install with: pip install pyelftools
+#
+# If pyelftools is not installed, the script will use a basic ELF reader
+
+pyelftools>=0.29
+

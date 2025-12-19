@@ -61,7 +61,8 @@ gtkwave riscv_pipeline.vcd
 
 📖 **For detailed instructions**, see [`docs/BUILD.md`](docs/BUILD.md) and [`docs/SIMULATION.md`](docs/SIMULATION.md)  
 🔧 **For FPGA synthesis**, see [`docs/SYNTHESIS.md`](docs/SYNTHESIS.md)  
-🎮 **For FPGA demonstration**, see [`docs/FPGA_DEMO.md`](docs/FPGA_DEMO.md) (includes Basys3 & DE10-Lite support)
+🎮 **For FPGA demonstration**, see [`docs/FPGA_DEMO.md`](docs/FPGA_DEMO.md) (includes Basys3 & DE10-Lite support)  
+✅ **For compliance testing**, see [`docs/RISCV_COMPLIANCE_TESTS.md`](docs/RISCV_COMPLIANCE_TESTS.md) (official RISC-V test suite integration)
 
 ---
 
@@ -733,6 +734,7 @@ Comprehensive documentation is available in the `docs/` directory:
 | [`SIMULATION.md`](docs/SIMULATION.md) | Simulation guide and waveform analysis |
 | [`SYNTHESIS.md`](docs/SYNTHESIS.md) | **FPGA synthesis guide (Vivado & Quartus)** |
 | [`FPGA_DEMO.md`](docs/FPGA_DEMO.md) | **FPGA demonstration guide with LED display and board support** |
+| [`RISCV_COMPLIANCE_TESTS.md`](docs/RISCV_COMPLIANCE_TESTS.md) | **RISC-V compliance test integration guide** |
 | [`TIMING_ANALYSIS.md`](docs/TIMING_ANALYSIS.md) | Timing report interpretation and critical path analysis |
 | [`OPTIMIZATION_GUIDE.md`](docs/OPTIMIZATION_GUIDE.md) | Optimization strategies for timing, resources, and power |
 | [`PERFORMANCE_MONITOR.md`](docs/PERFORMANCE_MONITOR.md) | Performance monitoring documentation |
