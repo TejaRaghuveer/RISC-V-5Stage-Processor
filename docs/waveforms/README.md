@@ -27,5 +27,4 @@ See [`../SIMULATION.md`](../SIMULATION.md) for detailed instructions on:
 - Interpreting results
 - Key signals to monitor
 
-See [`../TEST_REPORT.md`](../TEST_REPORT.md) for waveform analysis examples and expected behaviors.
 

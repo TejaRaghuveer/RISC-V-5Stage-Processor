@@ -527,7 +527,6 @@ Use the GitHub issue template or include:
 - **`docs/ARCHITECTURE.md`**: Detailed architecture documentation
 - **`docs/MODULES.md`**: Module-level documentation
 - **`docs/HAZARDS.md`**: Hazard handling documentation
-- **`docs/TEST_REPORT.md`**: Test results and coverage
 - **`docs/BUILD.md`**: Build instructions
 - **`docs/SIMULATION.md`**: Simulation guide
 
