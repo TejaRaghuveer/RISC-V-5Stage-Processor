@@ -223,7 +223,6 @@ module riscv_pipeline #(
         .DATA_WIDTH(DATA_WIDTH),
         .ADDR_WIDTH(ADDR_WIDTH),
         .MEM_DEPTH(IMEM_DEPTH),
-        .MEM_ADDR_WIDTH(IMEM_ADDR_WIDTH),
         .INIT_FILE(IMEM_INIT_FILE)
     ) instruction_memory (
         .clk(clk),
